@@ -54,7 +54,7 @@ body{font-family:'M Rounded 1c','Rounded Mplus 1c','Hiragino Maru Gothic ProN','
 .req{color:var(--red)}
 .sechead{display:flex;align-items:center;gap:10px;font-weight:900;font-size:15px;margin-bottom:12px}
 .sechead.big{font-size:18px;margin-bottom:14px}
-.platgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:10px 0}
+.platgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:10px 0}
 .phead{display:flex;align-items:center;gap:8px;font-weight:800}
 .plat{display:inline-flex;align-items:center;gap:6px;font-weight:800}
 .plat i{width:12px;height:12px;border-radius:50%;display:inline-block}
@@ -321,12 +321,14 @@ function pdot(pid){var p=getPlatform(pid);
 function hasDerived(c){return db.contents.some(function(o){return o.sourceContentId===c.id;});}
 function isSourceItem(c){return c.platformId==='source'||hasDerived(c);}
 function logoHTML(p){
-  if(p.domain){
+  if(p&&p.domain){
     return '<div class="qlogo">'+
       '<img src="https://www.google.com/s2/favicons?domain='+p.domain+'&sz=128" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'+
       '<span class="qfall" style="display:none;background:'+p.color+';align-items:center;justify-content:center">'+esc((p.name||'?').charAt(0))+'</span></div>';
   }
-  return '<div class="qlogo"><span class="qfall" style="background:'+p.color+';display:flex;align-items:center;justify-content:center">'+esc((p.name||'?').charAt(0))+'</span></div>';
+  var col=(p&&p.color)?p.color:'#94a3b8';
+  var nm=(p&&p.name)?p.name:'?';
+  return '<div class="qlogo"><span class="qfall" style="background:'+col+';display:flex;align-items:center;justify-content:center">'+esc(nm.charAt(0))+'</span></div>';
 }
 
 function seed(){return {contents:[
@@ -1231,7 +1233,7 @@ function viewLinks(){
       '<div style="flex:1;min-width:0"><div class="qname" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(l.name)+'</div>'+
       '<div class="muted" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(l.url||'URL未設定')+'</div></div>'+
       '<button class="btn btn-ghost sm" onclick="editLink(\''+l.id+'\')">編集</button>'+
-      '<button class="btn btn-danger sm" onclick="delLink(\''+l.id+'\')">削除</button></div>';}).join('');
+      '<button class="btn btn-danger sm" onclick="delLink(\'\\''+l.id+'\\'')">削除</button></div>';}).join('');
   return '<div class="sechead big">クイックリンク <span class="muted">'+LINKLIST.length+'件</span>'+
     '<button class="btn btn-primary" style="margin-left:auto" onclick="newLink()">＋ 新規リンク</button></div>'+
     '<p class="muted" style="margin-bottom:10px">追加・編集したリンクはダッシュボードのクイックリンクにすぐ反映されます。</p>'+
