@@ -137,7 +137,7 @@ window.addEventListener('error',function(e){
 </script>
 <script>
 /* ========== 데이터 ========== */
-var PLATFORMS=[
+var DEFAULT_PLATFORMS=[
   {id:'x',name:'X',color:'#1d9bf0',domain:'x.com'},
   {id:'instagram',name:'Instagram',color:'#ec4899',domain:'instagram.com'},
   {id:'ririi',name:'りり',color:'#a855f7',domain:''},
@@ -148,7 +148,12 @@ var PLATFORMS=[
   {id:'threads',name:'Threads',color:'#8a94a6',domain:'threads.net'},
   {id:'source',name:'元コンテンツ',color:'#94a3b8',domain:''}
 ];
-var DERIV_PLATFORMS=['x','instagram','blog','youtube','note','threads','ririi','wakuwaku'];
+var PLATFORMS=(function(){var raw=storeGet('bmen_platforms');
+  if(raw){try{var a=JSON.parse(raw);if(a&&a.length)return a;}catch(e){}}
+  return clone(DEFAULT_PLATFORMS);})();
+function savePlatforms(){storeSet('bmen_platforms',JSON.stringify(PLATFORMS));}
+
+var DERIV_PLATFORMS=function(){return PLATFORMS.filter(function(p){return p.id!=='source';}).map(function(p){return p.id;});};
 var STATUSES=[
   {id:'draft',label:'下書き'},
   {id:'review',label:'推敲中'},
@@ -370,7 +375,7 @@ function save(){var ok=storeSet(LS_KEY,JSON.stringify(db));
   return ok;}
 
 /* ========== 라우팅 ========== */
-var state={view:'dashboard',platform:null,editId:null,query:'',statusFilter:'all',preview:false,tplDraft:null,linkDraft:null};
+var state={view:'dashboard',platform:null,editId:null,query:'',statusFilter:'all',preview:false,tplDraft:null,linkDraft:null,platDraft:null};
 function nav(v,extra){extra=extra||{};state.view=v;
   if('platform' in extra)state.platform=extra.platform;
   render();}
@@ -381,6 +386,73 @@ function onSearch(v){state.query=v;
   if(state.view!=='list'){state.view='list';state.platform=null;}
   render();}
 function current(){return findIn(db.contents,state.editId);}
+
+/* ========== 플랫폼 관리 기능 ========== */
+function newPlatform(){
+  state.platDraft={id:'plat-'+uid(),name:'',color:'#1d9bf0',domain:''};
+  nav('plat-edit');
+}
+function editPlatform(id){
+  var p=findIn(PLATFORMS,id);if(!p)return;
+  state.platDraft=clone(p);
+  nav('plat-edit');
+}
+function savePlatform(){
+  var d=state.platDraft;if(!d)return;
+  if(!d.name||!d.name.trim()){toast('플랫폼 이름을 입력해주세요');return;}
+  d.name=d.name.trim();
+  if(!d.id)d.id='plat-'+uid();
+  var idx=-1;
+  for(var i=0;i<PLATFORMS.length;i++){if(PLATFORMS[i].id===d.id){idx=i;break;}}
+  if(idx>=0)PLATFORMS[idx]=d;else PLATFORMS.push(d);
+  savePlatforms();
+  state.platDraft=null;
+  toast('플랫폼이 저장되었습니다 (대시보드에 연동됨)');
+  nav('platforms');
+}
+function delPlatform(id){
+  if(id==='source'){toast('元コンテンツは削除できません');return;}
+  if(!confirm('이 플랫폼을 삭제하시겠습니까? 관련 콘텐츠 설정도 영향을 받을 수 있습니다.'))return;
+  PLATFORMS=PLATFORMS.filter(function(p){return p.id!==id;});
+  savePlatforms();
+  toast('플랫폼이 삭제되었습니다');
+  nav('platforms');
+}
+function viewPlatformEdit(){
+  var d=state.platDraft;
+  if(!d)return '<div class="card">플랫폼 정보를 찾을 수 없습니다</div>';
+  return '<div class="crumb"><button class="btn btn-ghost" onclick="nav(\'platforms\')">← 플랫폼 관리</button>'+
+    '<span class="muted">'+esc(d.id)+'</span>'+
+    '<div style="margin-left:auto;display:flex;gap:6px">'+
+    '<button class="btn btn-danger" onclick="delPlatform(\''+d.id+'\')">삭제</button>'+
+    '<button class="btn btn-primary" onclick="savePlatform()">저장</button></div></div>'+
+  '<div class="card"><div class="row2">'+
+    '<div class="field"><label>플랫폼 이름 <span class="req">*</span></label>'+
+      '<input value="'+esc(d.name)+'" oninput="state.platDraft.name=this.value" placeholder="예: TikTok"></div>'+
+    '<div class="field"><label>고유 아이디 (ID)</label>'+
+      '<input value="'+esc(d.id)+'" oninput="state.platDraft.id=this.value" placeholder="tiktok"></div>'+
+  '</div>'+
+  '<div class="row2">'+
+    '<div class="field"><label>대표 색상</label>'+
+      '<input type="color" value="'+esc(d.color||'#1d9bf0')+'" oninput="state.platDraft.color=this.value"></div>'+
+    '<div class="field"><label>도메인 (파비콘 자동취득용)</label>'+
+      '<input value="'+esc(d.domain||'')+'" oninput="state.platDraft.domain=this.value" placeholder="tiktok.com"></div>'+
+  '</div>'+
+  '<div class="actions"><button class="btn btn-primary" onclick="savePlatform()">저장</button></div></div>';
+}
+function viewPlatformsList(){
+  var editablePlats=PLATFORMS.filter(function(p){return p.id!=='source';});
+  return '<div class="sechead big">콘텐츠 작성 메뉴 관리 <span class="muted">'+editablePlats.length+'개</span>'+
+    '<button class="btn btn-primary" style="margin-left:auto" onclick="newPlatform()">＋ 플랫폼 추가</button></div>'+
+    '<p class="muted" style="margin-bottom:12px">왼쪽 콘텐츠 작성に 표시되는 항목(플랫폼)을 추가하거나 삭제할 수 있으며, 대시보드에도 연동되어 자동으로 반영됩니다.</p>'+
+    editablePlats.map(function(p){
+      return '<div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:8px">'+
+        logoHTML(p)+
+        '<div style="flex:1"><div class="qname">'+esc(p.name)+'</div><div class="muted" style="font-size:11px">ID: '+esc(p.id)+'</div></div>'+
+        '<button class="btn btn-ghost sm" onclick="editPlatform(\''+p.id+'\')">편집</button>'+
+        '<button class="btn btn-danger sm" onclick="delPlatform(\''+p.id+'\')">삭제</button></div>';
+    }).join('');
+}
 
 /* ========== 생성/변환 ========== */
 function newContent(pid,tid){return {id:uid(),platformId:pid,templateId:tid,title:'',status:'draft',
@@ -437,7 +509,7 @@ function removeTag(cid,key,i){var c=findIn(db.contents,cid);if(!c)return;
   var arr=c.values[key]||[];arr.splice(i,1);c.updatedAt=nowISO();save();render();}
 
 /* ========== 설정 ========== */
-function exportData(){var blob=new Blob([JSON.stringify({contents:db.contents,templates:TEMPLATES,links:LINKLIST},null,2)],{type:'application/json'});
+function exportData(){var blob=new Blob([JSON.stringify({contents:db.contents,templates:TEMPLATES,links:LINKLIST,platforms:PLATFORMS},null,2)],{type:'application/json'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='bmen-cms-backup.json';a.click();}
 function doImport(el){var f=el.files[0];if(!f)return;var r=new FileReader();
@@ -446,6 +518,7 @@ function doImport(el){var f=el.files[0];if(!f)return;var r=new FileReader();
       db.contents=obj.contents;
       if(obj.templates&&obj.templates.length){TEMPLATES=obj.templates;saveTemplates();}
       if(obj.links&&obj.links.length!==undefined){LINKLIST=obj.links;saveLinks();}
+      if(obj.platforms&&obj.platforms.length){PLATFORMS=obj.platforms;savePlatforms();}
       save();render();toast('インポートしました');}
     else{toast('形式が不正です');}}catch(e){toast('読み込みに失敗しました');}};
   r.readAsText(f);el.value='';}
@@ -587,7 +660,7 @@ function aiConvert(srcId,pid){
 function aiAll(srcId){
   var src=findIn(db.contents,srcId);if(!src)return;
   if(!getAiKey()){toast('設定でGemini APIキーを入力してください');nav('settings');return;}
-  var pids=DERIV_PLATFORMS.slice();var i=0;
+  var pids=DERIV_PLATFORMS();var i=0;
   (function next(){
     if(i>=pids.length){toast('全プラットフォームのAI生成が完了しました');return;}
     var pid=pids[i];i++;
@@ -995,8 +1068,8 @@ function viewDashboard(){
       '<div class="card kpi"><div class="klabel">公開予定</div><div class="num">'+sched+'件</div></div>'+
       '<div class="card kpi"><div class="klabel">今週のキャンペーン</div><div class="num small">投資記録</div><div class="muted">今週の更新 '+week+'件</div></div>'+
     '</div>'+
-    '<div class="sechead" style="margin-top:4px">コンテンツ作成メニュー</div>'+
-    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px">'+platformCardsHTML()+'</div>'+
+    '<div class="sechead" style="margin-top:4px">コンテンツ作成メニュー <button class="btn btn-ghost sm" style="margin-left:auto" onclick="nav(\'platforms\')">관리</button></div>'+
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">'+platformCardsHTML()+'</div>'+
     '<div class="card"><div class="sechead">最近のコンテンツ'+
       '<button class="btn btn-ghost sm" style="margin-left:auto" onclick="nav(\'list\',{platform:null})">すべて見る</button></div>'+
       '<table class="tbl">'+tableHead+contentRows(recent)+'</table></div>'+
@@ -1016,7 +1089,7 @@ function viewSource(){
   '<p class="muted" style="margin-bottom:12px">新規作成ではCSV・画像・自分のコメントから初案を作れます。'+
   '＋ボタンでルールベース下書き、✨AI一括生成でGeminiが全プラットフォームの下書きを作成します。</p>';
   html+=items.map(function(c){
-    var chips=DERIV_PLATFORMS.map(function(pid){
+    var chips=DERIV_PLATFORMS().map(function(pid){
       var d=null;
       for(var i=0;i<db.contents.length;i++){
         var o=db.contents[i];
@@ -1211,12 +1284,13 @@ function viewSettings(){
 /* ========== 렌더 ========== */
 var views={dashboard:viewDashboard,source:viewSource,'new-source':viewNewSource,list:viewList,edit:viewEdit,
   'new-platform':viewNewPlatform,'new-template':viewNewTemplate,templates:viewTemplates,'tpl-edit':viewTplEdit,
-  publish:viewPublish,links:viewLinks,settings:viewSettings};
+  publish:viewPublish,links:viewLinks,settings:viewSettings,platforms:viewPlatformsList,'plat-edit':viewPlatformEdit};
 function render(){
   var items=document.querySelectorAll('.menu-item');
   for(var i=0;i<items.length;i++)items[i].classList.remove('active');
   var key='dashboard';
   if(state.view==='source'||state.view==='new-source')key='source';
+  else if(state.view==='platforms'||state.view==='plat-edit')key='platforms';
   else if(state.view==='list')key=state.platform?('list-'+state.platform):'list-all';
   else if(state.view==='edit'){var c=current();
     key=c?((c.platformId==='source')?'source':('list-'+c.platformId)):'list-all';}
@@ -1235,8 +1309,10 @@ function sidebarHTML(){var distPlats=PLATFORMS.filter(function(p){return p.id!==
   return '<div class="sidebar"><div class="logo">B面サイト管理 v12</div>'+
   '<div class="menu-item" data-m="dashboard" onclick="nav(\'dashboard\')">ダッシュボード</div>'+
   '<div class="menu-item" data-m="source" onclick="nav(\'source\')">元コンテンツ</div>'+
+  '<div class="menu-item" data-m="platforms" onclick="nav(\'platforms\')">콘텐츠 작성 메뉴 관리</div>'+
   '<div class="menu-item" data-m="list-all" onclick="nav(\'list\',{platform:null})">コンテンツ作成</div>'+
   distPlats.map(function(p){return '<div class="menu-item sub" data-m="list-'+p.id+'" onclick="nav(\'list\',{platform:\''+p.id+'\'})">'+p.name+'</div>';}).join('')+
+  '<div class="spec-spacing"></div>'+
   '<div class="menu-item" data-m="templates" onclick="nav(\'templates\')">テンプレート</div>'+
   '<div class="menu-item" data-m="publish" onclick="nav(\'publish\')">公開管理</div>'+
   '<div class="menu-item" data-m="links" onclick="nav(\'links\')">クイックリンク</div>'+
