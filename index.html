@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -341,11 +340,11 @@ var i18n = {
     stDraft:'Draft', stReview:'Reviewing', stScheduled:'Scheduled', stPublished:'Published', stArchived:'Archived', logout:'Logout'
   },
   ko: {
-    sysTitle:'サイト記事管理システム', dashboard:'ダッシュボード', source:'元コンテンツ', menuMgmt:'メニュー管理', createContent:'コンテンツ作成',
-    templates:'テンプレート', publishMgmt:'公開管理', quickLinks:'クイックリンク', settings:'設定', search:'検索', newCreate:'新規作成', createFromTpl:'テンプレートから作成',
-    recentContent:'最近のコンテンツ', quickCreate:'クイック作成', manage:'管理', viewAll:'すべて見る', title:'タイトル', platform:'プラットフォーム', template:'テンプレート',
-    status:'状態', pubDate:'公開予定日', updateDate:'更新日', action:'操作', delete:'削除', edit:'編集', save:'保存', cancel:'キャンセル', open:'開く',
-    stDraft:'下書き', stReview:'推敲中', stScheduled:'公開予定', stPublished:'公開済み', stArchived:'アーカイブ', logout:'로그아웃'
+    sysTitle:'사이트 글 관리 시스템', dashboard:'대시보드', source:'원본 콘텐츠', menuMgmt:'메뉴 관리', createContent:'콘텐츠 생성',
+    templates:'템플릿', publishMgmt:'발행 관리', quickLinks:'빠른 링크', settings:'설정', search:'검색', newCreate:'신규 생성', createFromTpl:'템플릿에서 생성',
+    recentContent:'최근 콘텐츠', quickCreate:'빠른 생성', manage:'관리', viewAll:'모두 보기', title:'제목', platform:'플랫폼', template:'템플릿',
+    status:'상태', pubDate:'발행 예정일', updateDate:'수정일', action:'작업', delete:'삭제', edit:'편집', save:'저장', cancel:'취소', open:'열기',
+    stDraft:'초안', stReview:'검토중', stScheduled:'발행 예약', stPublished:'발행 완료', stArchived:'보관함', logout:'로그아웃'
   },
   zh: {
     sysTitle:'B面网站管理系统', dashboard:'仪表板', source:'源内容', menuMgmt:'菜单管理', createContent:'创建内容',
@@ -369,7 +368,7 @@ function changeLang(lang){
   initAppLayout();
 }
 
-/* ========== データとローカルストレージ ========== */
+/* ========== 데이터와ロー컬ストレージ ========== */
 var DEFAULT_PLATFORMS=[
   {id:'x',name:'X',color:'#1d9bf0',domain:'x.com'},
   {id:'instagram',name:'Instagram',color:'#ec4899',domain:'instagram.com'},
@@ -464,7 +463,7 @@ var BUILTIN_TEMPLATES=[
     {key:'eyeCatch',label:'見出し画像（URL）',type:'image',help:'推奨 1280×720（16:9）。公式推奨サイズを守る'},
     {key:'lead',label:'リード文',type:'textarea',limit:200,help:'プレビューカードに出る冒頭文。結論を先に'},
     {key:'toc',label:'目次（長い記事の場合）',type:'textarea',placeholder:'1. 今週の状況 / 2. 判断の理由 / 3. まとめ',help:'記事が長い・見出しが多い場合は冒頭に目次を入れる'},
-    {key:'body',label:'本文',type:'textarea',big:true,help:'段落は80〜150文字で区切ると読まれやすい'},
+    {key:'body',label:'本文',type:'textarea',big:true,help:'段落は80〜150文字で切ると読まれやすい'},
     {key:'outro',label:'まとめ',type:'textarea'},
     {key:'cta',label:'CTA（フォロー／スキ案内）',type:'text',placeholder:'例：参考になったらフォロー＆スキしてください',help:'文末にフォロー／スキの案内を入れる'},
     {key:'tags',label:'タグ',type:'tags',maxTags:5,help:'関連タグを最大5個'}]},
@@ -557,7 +556,6 @@ function seed(){
   var initialContents = [];
   var distPlats = PLATFORMS.filter(function(p){return p.id!=='source';});
   
-  // 각 플랫폼별로 1개씩 초기 샘플 생성
   distPlats.forEach(function(p, idx){
     var tpl = defaultTemplateFor(p.id);
     initialContents.push({
@@ -574,7 +572,6 @@ function seed(){
     });
   });
 
-  // 원본(source) 콘텐츠 1개 추가
   initialContents.unshift({
     id: 'c-src',
     platformId: 'source',
@@ -594,7 +591,6 @@ var db=null;
 (function(){var raw=storeGet(LS_KEY);
   if(raw){try{db=JSON.parse(raw);}catch(e){db=null;}}})();
 if(!db||!Array.isArray(db.contents)){db=seed();storeSet(LS_KEY,JSON.stringify(db));} else {
-  // 이미 데이터가 있는 경우 각 플랫폼당 1개씩만 남기도록 정제
   var seenPlatforms = {};
   var filtered = [];
   db.contents.forEach(function(c){
@@ -1433,7 +1429,7 @@ function viewNewPlatform(){var distPlats=PLATFORMS.filter(function(p){return p.i
     '<div class="muted">'+esc(defaultTemplateFor(p.id).name)+'</div></div>';}).join('')+'</div>';}
 
 function viewNewTemplate(){return '<div class="sechead big">'+t('createFromTpl')+'</div>'+
-  PLATFORMS.map(function(p){var ts=TEMPLATES.filter(function(tpl){return tpl.platform===p.id;});
+  PLATFORMS.filter(function(p){return p.id!=='source';}).map(function(p){var ts=TEMPLATES.filter(function(tpl){return tpl.platform===p.id;});
     if(!ts.length)return '';
     return '<div class="card"><div class="sechead">'+pdot(p.id)+'</div><div class="quickbar">'+
       ts.map(function(tpl){return '<button class="btn btn-outline" onclick="createFromTemplate(\''+tpl.id+'\')">'+esc(tpl.name)+'</button>';}).join('')+
