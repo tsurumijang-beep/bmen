@@ -54,10 +54,6 @@ body{font-family:'M Rounded 1c','Rounded Mplus 1c','Hiragino Maru Gothic ProN','
 .req{color:var(--red)}
 .sechead{display:flex;align-items:center;gap:10px;font-weight:900;font-size:15px;margin-bottom:12px}
 .sechead.big{font-size:18px;margin-bottom:14px}
-.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.kpi .klabel{color:var(--muted);font-size:12px;margin-bottom:4px;font-weight:700}
-.kpi .num{font-size:28px;font-weight:900}
-.kpi .num.small{font-size:20px}
 .platgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:10px 0}
 .phead{display:flex;align-items:center;gap:8px;font-weight:800}
 .plat{display:inline-flex;align-items:center;gap:6px;font-weight:800}
@@ -444,7 +440,7 @@ function viewPlatformsList(){
   var editablePlats=PLATFORMS.filter(function(p){return p.id!=='source';});
   return '<div class="sechead big">콘텐츠 작성 메뉴 관리 <span class="muted">'+editablePlats.length+'개</span>'+
     '<button class="btn btn-primary" style="margin-left:auto" onclick="newPlatform()">＋ 플랫폼 추가</button></div>'+
-    '<p class="muted" style="margin-bottom:12px">왼쪽 콘텐츠 작성に 표시되는 항목(플랫폼)을 추가하거나 삭제할 수 있으며, 대시보드에도 연동되어 자동으로 반영됩니다.</p>'+
+    '<p class="muted" style="margin-bottom:12px">왼쪽 콘텐츠 작성에 표시되는 항목(플랫폼)을 추가하거나 삭제할 수 있으며, 대시보드에도 연동되어 자동으로 반영됩니다.</p>'+
     editablePlats.map(function(p){
       return '<div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:8px">'+
         logoHTML(p)+
@@ -1058,16 +1054,8 @@ function platformCardsHTML(){
       '</div>';}).join('');}
 
 function viewDashboard(){
-  var write=db.contents.filter(function(c){return c.status==='draft'||c.status==='review';}).length;
-  var sched=db.contents.filter(function(c){return c.status==='scheduled';}).length;
-  var week=db.contents.filter(function(c){return (Date.now()-new Date(c.updatedAt).getTime())<7*864e5;}).length;
   var recent=db.contents.slice().sort(function(a,b){return (b.updatedAt||'').localeCompare(a.updatedAt||'');}).slice(0,6);
   return '<div>'+
-    '<div class="kpis">'+
-      '<div class="card kpi"><div class="klabel">今日の作成対象</div><div class="num">'+write+'件</div></div>'+
-      '<div class="card kpi"><div class="klabel">公開予定</div><div class="num">'+sched+'件</div></div>'+
-      '<div class="card kpi"><div class="klabel">今週のキャンペーン</div><div class="num small">投資記録</div><div class="muted">今週の更新 '+week+'件</div></div>'+
-    '</div>'+
     '<div class="sechead" style="margin-top:4px">コンテンツ作成メニュー <button class="btn btn-ghost sm" style="margin-left:auto" onclick="nav(\'platforms\')">관리</button></div>'+
     '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">'+platformCardsHTML()+'</div>'+
     '<div class="card"><div class="sechead">最近のコンテンツ'+
