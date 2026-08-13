@@ -75,10 +75,6 @@ body{font-family:'Hiragino Kaku Gothic ProN','Noto Sans JP','Malgun Gothic',syst
 .qfall{width:28px;height:28px;border-radius:8px;color:#fff;font-weight:800;font-size:14px}
 .qname{font-weight:800;font-size:14px}
 .qopen{font-size:10px;color:var(--muted);letter-spacing:.05em}
-.dash{display:grid;grid-template-columns:1fr 260px;gap:12px;align-items:start}
-.pipeline .node{background:var(--panel2);border:1px solid var(--border);border-radius:999px;padding:7px 12px;text-align:center;margin:5px 0;cursor:pointer}
-.pipeline .node:hover{border-color:var(--accent2)}
-.pipeline .arrow{text-align:center;color:var(--accent2);font-size:15px}
 .tbl{width:100%;border-collapse:collapse}
 .tbl th{color:var(--muted);font-size:12px;text-align:left;padding:6px 10px;border-bottom:1px solid var(--border)}
 .tbl td{padding:7px 10px;border-bottom:1px solid #f0e9db;font-size:13px}
@@ -291,13 +287,13 @@ function saveLink(){var d=state.linkDraft;if(!d)return;
 function autoColor(){var d=state.linkDraft;if(!d)return;
   d.color=pastelFromName(d.name||d.url||'link');render();}
 
-/* ========== 템플릿 ========== */
+/* ========== テンプレート ========== */
 var TEMPLATES=(function(){var raw=storeGet('bmen_templates');
   if(raw){try{var a=JSON.parse(raw);if(a&&a.length)return a;}catch(e){}}
   return clone(BUILTIN_TEMPLATES);})();
 function saveTemplates(){storeSet('bmen_templates',JSON.stringify(TEMPLATES));}
 
-/* ========== 유 ========== */
+/* ========== 유ティ ========== */
 function $(s){return document.querySelector(s);}
 function esc(s){if(s==null)s='';return String(s).replace(/[&<>"']/g,function(m){
   return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&#34;',"'":'&#39;'}[m];});}
@@ -373,7 +369,7 @@ function save(){var ok=storeSet(LS_KEY,JSON.stringify(db));
   if(!ok)toast('保存に失敗しました（画像が大きすぎる可能性）。画像を減らしてください。');
   return ok;}
 
-/* ========== 라우팅 ========== */
+/* ========== 라우ティング ========== */
 var state={view:'dashboard',platform:null,editId:null,query:'',statusFilter:'all',preview:false,tplDraft:null,linkDraft:null};
 function nav(v,extra){extra=extra||{};state.view=v;
   if('platform' in extra)state.platform=extra.platform;
@@ -733,7 +729,7 @@ function viewNewSource(){
     '</div></div>';
 }
 
-/* ========== 템플릿 편집기 ========== */
+/* ========== テンプレート編集器 ========== */
 function openTplEdit(id){var t=findIn(TEMPLATES,id);if(!t)return;
   state.tplDraft=clone(t);nav('tpl-edit');}
 function newTpl(){state.tplDraft={id:'tpl-'+uid(),platform:'x',name:'',
@@ -822,7 +818,7 @@ function viewTplEdit(){var d=state.tplDraft;
     '<button class="btn btn-primary" onclick="saveTpl()">テンプレートを保存</button></div>';
   return html;}
 
-/* ========== 자동저장 ========== */
+/* ========== 自動保存 ========== */
 function updateCount(t){if(!t||!t.dataset||!t.dataset.f)return;
   var el=document.querySelector('[data-count="'+t.dataset.f+'"]');if(!el)return;
   var lim=parseInt(el.getAttribute('data-limit'),10)||0;
@@ -860,7 +856,7 @@ var toastT=null;
 function toast(msg){var el=$('#toast');el.textContent=msg;el.classList.add('show');
   if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){el.classList.remove('show');},1800);}
 
-/* ========== 프리뷰 ========== */
+/* ========== プレビュー ========== */
 function pvTags(arr){if(!arr||!arr.length)return '';
   return arr.map(function(t){return '<span class="pv-tag">#'+esc(t)+'</span>';}).join(' ');}
 function previewHTML(c){var v=c.values||{};var out='';
@@ -958,12 +954,7 @@ function previewHTML(c){var v=c.values||{};var out='';
   }
   return out;}
 
-/* ========== 뷰 ========== */
-function countsByPlatform(){var m={};
-  PLATFORMS.forEach(function(p){m[p.id]={draft:0,review:0,scheduled:0,published:0,archived:0,total:0};});
-  db.contents.forEach(function(c){if(m[c.platformId]&&m[c.platformId][c.status]!==undefined){
-    m[c.platformId][c.status]++;m[c.platformId].total++;}});
-  return m;}
+/* ========== ビュー ========== */
 var tableHead='<tr><th>タイトル</th><th>プラットフォーム</th><th>テンプレート</th><th>状態</th><th>公開予定日</th><th>更新日</th></tr>';
 function contentRows(items,withDel){return items.map(function(c){
   return '<tr class="clickable" onclick="openEdit(\''+c.id+'\')">'+
@@ -976,26 +967,20 @@ function contentRows(items,withDel){return items.map(function(c){
   (withDel?'<td style="text-align:right"><button class="btn btn-danger sm" onclick="event.stopPropagation();del(\''+c.id+'\')">削除</button></td>':'')+
   '</tr>';}).join('');}
 
-function quickCardsHTML(){var cnt=countsByPlatform();
+function quickCardsHTML(){
   return LINKLIST.map(function(l){
-    var m=cnt[l.id];
-    var badges=m?('<div class="pbadges" style="margin-top:0">'+
-      '<span class="badge st-draft">下書き '+(m.draft+m.review)+'</span>'+
-      '<span class="badge st-scheduled">公開予定 '+m.scheduled+'</span>'+
-      '<span class="badge st-published">公開済み '+m.published+'</span></div>'):'';
     return '<a class="qcard" href="'+(l.url||'#')+'" target="_blank" rel="noopener" '+
       'style="background:linear-gradient(140deg,'+l.color+'26,#ffffff 70%);border:1px solid '+l.color+'55">'+
       '<div style="display:flex;align-items:center;gap:10px">'+logoHTML(l)+
       '<div><div class="qname">'+esc(l.name)+'</div><div class="qopen">OPEN ↗</div></div></div>'+
-      badges+'</a>';}).join('');}
+      '</a>';}).join('');}
 
-function viewDashboard(){var cnt=countsByPlatform();
+function viewDashboard(){
   var write=db.contents.filter(function(c){return c.status==='draft'||c.status==='review';}).length;
   var sched=db.contents.filter(function(c){return c.status==='scheduled';}).length;
   var week=db.contents.filter(function(c){return (Date.now()-new Date(c.updatedAt).getTime())<7*864e5;}).length;
   var recent=db.contents.slice().sort(function(a,b){return (b.updatedAt||'').localeCompare(a.updatedAt||'');}).slice(0,6);
-  var srcCount=db.contents.filter(isSourceItem).length;
-  return '<div class="dash"><div>'+
+  return '<div>'+
     '<div class="kpis">'+
       '<div class="card kpi"><div class="klabel">今日の作成対象</div><div class="num">'+write+'件</div></div>'+
       '<div class="card kpi"><div class="klabel">公開予定</div><div class="num">'+sched+'件</div></div>'+
@@ -1009,14 +994,7 @@ function viewDashboard(){var cnt=countsByPlatform();
       '<table class="tbl">'+tableHead+contentRows(recent)+'</table></div>'+
     '<div class="card"><div class="sechead">クイック作成</div><div class="quickbar">'+
       TEMPLATES.map(function(t){return '<button class="btn btn-outline" onclick="createFromTemplate(\''+t.id+'\')">'+esc(t.name)+'</button>';}).join('')+
-    '</div></div></div>'+
-  '<div class="card pipeline"><div class="sechead">コンテンツ再利用パイプライン</div>'+
-    '<div class="node" onclick="nav(\'source\')">元コンテンツ（'+srcCount+'）</div><div class="arrow">↓</div>'+
-    '<div class="node" onclick="nav(\'list\',{platform:\'x\'})">X用（'+cnt.x.total+'）</div><div class="arrow">↓</div>'+
-    '<div class="node" onclick="nav(\'list\',{platform:\'instagram\'})">Instagram用（'+cnt.instagram.total+'）</div><div class="arrow">↓</div>'+
-    '<div class="node" onclick="nav(\'list\',{platform:\'blog\'})">BLOG用（'+cnt.blog.total+'）</div><div class="arrow">↓</div>'+
-    '<div class="node" onclick="nav(\'list\',{platform:\'youtube\'})">YouTube用（'+cnt.youtube.total+'）</div>'+
-  '</div></div>';}
+    '</div></div></div>';}
 
 function viewSource(){
   var items=db.contents.filter(isSourceItem)
@@ -1175,16 +1153,17 @@ function viewLinks(){
       '<button class="btn btn-ghost" onclick="autoColor()">🎨 自動パステルカラー</button></div></div>';
   }
   var rows=LINKLIST.map(function(l){
-    return '<div class="card" style="display:flex;align-items:center;gap:12px">'+
+    return '<div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:0">'+
       logoHTML(l)+
-      '<div style="flex:1"><div class="qname">'+esc(l.name)+'</div>'+
-      '<div class="muted" style="font-size:11px">'+esc(l.url||'URL未設定')+'</div></div>'+
+      '<div style="flex:1;min-width:0"><div class="qname" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(l.name)+'</div>'+
+      '<div class="muted" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(l.url||'URL未設定')+'</div></div>'+
       '<button class="btn btn-ghost sm" onclick="editLink(\''+l.id+'\')">編集</button>'+
       '<button class="btn btn-danger sm" onclick="delLink(\''+l.id+'\')">削除</button></div>';}).join('');
   return '<div class="sechead big">クイックリンク <span class="muted">'+LINKLIST.length+'件</span>'+
     '<button class="btn btn-primary" style="margin-left:auto" onclick="newLink()">＋ 新規リンク</button></div>'+
     '<p class="muted" style="margin-bottom:10px">追加・編集したリンクはダッシュボードのクイックリンクにすぐ反映されます。</p>'+
-    editor+rows;}
+    editor+
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">'+rows+'</div>';}
 
 function viewSettings(){
   var mList=getModelList();
@@ -1217,7 +1196,7 @@ function viewSettings(){
   '<div class="card"><div class="sechead">現在のデータ</div>'+
     '<p>コンテンツ数：'+db.contents.length+'件 ／ テンプレート数：'+TEMPLATES.length+'個 ／ リンク数：'+LINKLIST.length+'個</p></div>';}
 
-/* ========== 렌더 ========== */
+/* ========== レンダ ========== */
 var views={dashboard:viewDashboard,source:viewSource,'new-source':viewNewSource,list:viewList,edit:viewEdit,
   'new-platform':viewNewPlatform,'new-template':viewNewTemplate,templates:viewTemplates,'tpl-edit':viewTplEdit,
   publish:viewPublish,links:viewLinks,settings:viewSettings};
@@ -1251,7 +1230,7 @@ function sidebarHTML(){var distPlats=PLATFORMS.filter(function(p){return p.id!==
   '<div class="menu-item" data-m="links" onclick="nav(\'links\')">クイックリンク</div>'+
   '<div class="menu-item" data-m="settings" onclick="nav(\'settings\')">設定</div></div>';}
 
-/* ========== 시작 ========== */
+/* ========== スタート ========== */
 try{
   $('#app').innerHTML=sidebarHTML()+
     '<div class="main"><div class="topbar"><div class="tb-title">B面サイト管理システム</div>'+
