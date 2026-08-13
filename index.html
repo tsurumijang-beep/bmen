@@ -132,7 +132,7 @@ window.addEventListener('error',function(e){
 },true);
 </script>
 <script>
-/* ========== 데이터 ========== */
+/* ========== データ ========== */
 var DEFAULT_PLATFORMS=[
   {id:'x',name:'X',color:'#1d9bf0',domain:'x.com'},
   {id:'instagram',name:'Instagram',color:'#ec4899',domain:'instagram.com'},
@@ -395,7 +395,7 @@ function editPlatform(id){
 }
 function savePlatform(){
   var d=state.platDraft;if(!d)return;
-  if(!d.name||!d.name.trim()){toast('플랫폼 이름을 입력해주세요');return;}
+  if(!d.name||!d.name.trim()){toast('プラットフォーム名を入力してください');return;}
   d.name=d.name.trim();
   if(!d.id)d.id='plat-'+uid();
   var idx=-1;
@@ -403,50 +403,50 @@ function savePlatform(){
   if(idx>=0)PLATFORMS[idx]=d;else PLATFORMS.push(d);
   savePlatforms();
   state.platDraft=null;
-  toast('플랫폼이 저장되었습니다 (대시보드에 연동됨)');
+  toast('プラットフォームを保存しました');
   nav('platforms');
 }
 function delPlatform(id){
   if(id==='source'){toast('元コンテンツは削除できません');return;}
-  if(!confirm('이 플랫폼을 삭제하시겠습니까? 관련 콘텐츠 설정도 영향을 받을 수 있습니다.'))return;
+  if(!confirm('このプラットフォームを削除しますか？'))return;
   PLATFORMS=PLATFORMS.filter(function(p){return p.id!==id;});
   savePlatforms();
-  toast('플랫폼이 삭제되었습니다');
+  toast('プラットフォームを削除しました');
   nav('platforms');
 }
 function viewPlatformEdit(){
   var d=state.platDraft;
-  if(!d)return '<div class="card">플랫폼 정보를 찾을 수 없습니다</div>';
-  return '<div class="crumb"><button class="btn btn-ghost" onclick="nav(\'platforms\')">← 플랫폼 관리</button>'+
+  if(!d)return '<div class="card">プラットフォーム情報が見つかりません</div>';
+  return '<div class="crumb"><button class="btn btn-ghost" onclick="nav(\'platforms\')">← プラットフォーム管理</button>'+
     '<span class="muted">'+esc(d.id)+'</span>'+
     '<div style="margin-left:auto;display:flex;gap:6px">'+
-    '<button class="btn btn-danger" onclick="delPlatform(\''+d.id+'\')">삭제</button>'+
-    '<button class="btn btn-primary" onclick="savePlatform()">저장</button></div></div>'+
+    '<button class="btn btn-danger" onclick="delPlatform(\''+d.id+'\')">削除</button>'+
+    '<button class="btn btn-primary" onclick="savePlatform()">保存</button></div></div>'+
   '<div class="card"><div class="row2">'+
-    '<div class="field"><label>플랫폼 이름 <span class="req">*</span></label>'+
-      '<input value="'+esc(d.name)+'" oninput="state.platDraft.name=this.value" placeholder="예: TikTok"></div>'+
-    '<div class="field"><label>고유 아이디 (ID)</label>'+
+    '<div class="field"><label>プラットフォーム名 <span class="req">*</span></label>'+
+      '<input value="'+esc(d.name)+'" oninput="state.platDraft.name=this.value" placeholder="例：TikTok"></div>'+
+    '<div class="field"><label>固有ID</label>'+
       '<input value="'+esc(d.id)+'" oninput="state.platDraft.id=this.value" placeholder="tiktok"></div>'+
   '</div>'+
   '<div class="row2">'+
-    '<div class="field"><label>대표 색상</label>'+
+    '<div class="field"><label>代表カラー</label>'+
       '<input type="color" value="'+esc(d.color||'#1d9bf0')+'" oninput="state.platDraft.color=this.value"></div>'+
-    '<div class="field"><label>도메인 (파비콘 자동취득용)</label>'+
+    '<div class="field"><label>ドメイン</label>'+
       '<input value="'+esc(d.domain||'')+'" oninput="state.platDraft.domain=this.value" placeholder="tiktok.com"></div>'+
   '</div>'+
-  '<div class="actions"><button class="btn btn-primary" onclick="savePlatform()">저장</button></div></div>';
+  '<div class="actions"><button class="btn btn-primary" onclick="savePlatform()">保存</button></div></div>';
 }
 function viewPlatformsList(){
   var editablePlats=PLATFORMS.filter(function(p){return p.id!=='source';});
-  return '<div class="sechead big">콘텐츠 작성 메뉴 관리 <span class="muted">'+editablePlats.length+'개</span>'+
-    '<button class="btn btn-primary" style="margin-left:auto" onclick="newPlatform()">＋ 플랫폼 추가</button></div>'+
-    '<p class="muted" style="margin-bottom:12px">왼쪽 콘텐츠 작성에 표시되는 항목(플랫폼)을 추가하거나 삭제할 수 있으며, 대시보드에도 연동되어 자동으로 반영됩니다.</p>'+
+  return '<div class="sechead big">コンテンツ作成メニュー管理 <span class="muted">'+editablePlats.length+'件</span>'+
+    '<button class="btn btn-primary" style="margin-left:auto" onclick="newPlatform()">＋ プラットフォーム追加</button></div>'+
+    '<p class="muted" style="margin-bottom:12px">左側のコンテンツ作成に表示される項目（プラットフォーム）の追加や削除を行えます。</p>'+
     editablePlats.map(function(p){
       return '<div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:8px">'+
         logoHTML(p)+
         '<div style="flex:1"><div class="qname">'+esc(p.name)+'</div><div class="muted" style="font-size:11px">ID: '+esc(p.id)+'</div></div>'+
-        '<button class="btn btn-ghost sm" onclick="editPlatform(\''+p.id+'\')">편집</button>'+
-        '<button class="btn btn-danger sm" onclick="delPlatform(\''+p.id+'\')">삭제</button></div>';
+        '<button class="btn btn-ghost sm" onclick="editPlatform(\''+p.id+'\')">編集</button>'+
+        '<button class="btn btn-danger sm" onclick="delPlatform(\''+p.id+'\')">削除</button></div>';
     }).join('');
 }
 
@@ -1056,7 +1056,7 @@ function platformCardsHTML(){
 function viewDashboard(){
   var recent=db.contents.slice().sort(function(a,b){return (b.updatedAt||'').localeCompare(a.updatedAt||'');}).slice(0,6);
   return '<div>'+
-    '<div class="sechead" style="margin-top:4px">コンテンツ作成メニュー <button class="btn btn-ghost sm" style="margin-left:auto" onclick="nav(\'platforms\')">관리</button></div>'+
+    '<div class="sechead" style="margin-top:4px">コンテンツ作成メニュー <button class="btn btn-ghost sm" style="margin-left:auto" onclick="nav(\'platforms\')">管理</button></div>'+
     '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">'+platformCardsHTML()+'</div>'+
     '<div class="card"><div class="sechead">最近のコンテンツ'+
       '<button class="btn btn-ghost sm" style="margin-left:auto" onclick="nav(\'list\',{platform:null})">すべて見る</button></div>'+
@@ -1297,7 +1297,7 @@ function sidebarHTML(){var distPlats=PLATFORMS.filter(function(p){return p.id!==
   return '<div class="sidebar"><div class="logo">B面サイト管理 v12</div>'+
   '<div class="menu-item" data-m="dashboard" onclick="nav(\'dashboard\')">ダッシュボード</div>'+
   '<div class="menu-item" data-m="source" onclick="nav(\'source\')">元コンテンツ</div>'+
-  '<div class="menu-item" data-m="platforms" onclick="nav(\'platforms\')">콘텐츠 작성 메뉴 관리</div>'+
+  '<div class="menu-item" data-m="platforms" onclick="nav(\'platforms\')">メニュー管理</div>'+
   '<div class="menu-item" data-m="list-all" onclick="nav(\'list\',{platform:null})">コンテンツ作成</div>'+
   distPlats.map(function(p){return '<div class="menu-item sub" data-m="list-'+p.id+'" onclick="nav(\'list\',{platform:\''+p.id+'\'})">'+p.name+'</div>';}).join('')+
   '<div class="spec-spacing"></div>'+
