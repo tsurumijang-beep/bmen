@@ -163,7 +163,7 @@ textarea.big{min-height:120px}
     gap: 6px;
     align-items: center;
   }
-  .logo { display: none; } /* 공간 절약을 위해 모바일선 로고 숨김 */
+  .logo { display: none; }
   .menu-item { 
     flex: 0 0 auto; 
     margin: 0; 
@@ -172,7 +172,7 @@ textarea.big{min-height:120px}
     border-radius: 8px;
     white-space: nowrap;
   }
-  .menu-item.sub { display: none; } /* 서브메뉴는 모바일 복잡도 줄이기 위해 숨김 처리 (대메뉴로 접근) */
+  .menu-item.sub { display: none; }
 
   /* 메인 영역 넓게 쓰도록 패딩 축소 */
   .main {
@@ -253,7 +253,6 @@ textarea.big{min-height:120px}
   window.fbAuth = auth;
   window.currentUser = null;
 
-  // ログイン状態のリアルタイム監視
   onAuthStateChanged(auth, (user) => {
     if (user) {
       window.currentUser = user;
@@ -264,7 +263,6 @@ textarea.big{min-height:120px}
     }
   });
 
-  // メールアドレスでログイン
   window.loginWithEmail = async function() {
     const email = document.getElementById('loginEmail').value;
     const pass = document.getElementById('loginPass').value;
@@ -277,7 +275,6 @@ textarea.big{min-height:120px}
     }
   };
 
-  // 新規アカウント登録
   window.signUpWithEmail = async function() {
     const email = document.getElementById('loginEmail').value;
     const pass = document.getElementById('loginPass').value;
@@ -290,7 +287,6 @@ textarea.big{min-height:120px}
     }
   };
 
-  // Googleアカウントでログイン
   window.loginWithGoogle = async function() {
     const provider = new GoogleAuthProvider();
     try {
@@ -301,7 +297,6 @@ textarea.big{min-height:120px}
     }
   };
 
-  // ログアウト
   window.logoutFirebase = function() {
     signOut(auth).then(() => {
       toast('ログアウトしました');
@@ -471,7 +466,7 @@ var BUILTIN_TEMPLATES=[
     {key:'eyeCatch',label:'見出し画像（URL）',type:'image',help:'推奨 1280×720（16:9）。公式推奨サイズを守る'},
     {key:'lead',label:'リード文',type:'textarea',limit:200,help:'プレビューカードに出る冒頭文。結論を先に'},
     {key:'toc',label:'目次（長い記事の場合）',type:'textarea',placeholder:'1. 今週の状況 / 2. 判断の理由 / 3. まとめ',help:'記事が長い・見出しが多い場合は冒頭に目次を入れる'},
-    {key:'body',label:'本文',type:'textarea',big:true,help:'段落は80〜150文字で切ると読まれやすい'},
+    {key:'body',label:'本文',type:'textarea',big:true,help:'段落は80〜150文字で区切ると読まれやすい'},
     {key:'outro',label:'まとめ',type:'textarea'},
     {key:'cta',label:'CTA（フォロー／スキ案内）',type:'text',placeholder:'例：参考になったらフォロー＆スキしてください',help:'文末にフォロー／スキの案内を入れる'},
     {key:'tags',label:'タグ',type:'tags',maxTags:5,help:'関連タグを最大5個'}]},
@@ -573,43 +568,60 @@ function logoHTML(p){
   return '<div class="qlogo"><span class="qfall" style="background:'+col+';display:flex;align-items:center;justify-content:center">'+esc(nm.charAt(0))+'</span></div>';
 }
 
-function seed(){return {contents:[
-  {id:'c-src',platformId:'source',templateId:'source-note',title:'現金比率15%の理由（元ネタ）',status:'draft',
-   publishAt:'',sourceContentId:null,createdAt:'2026-08-12T09:00',updatedAt:'2026-08-12T09:00',
-   values:{topic:'今週も現金15%を維持した',core:'防御株を維持 / ETF一部買い増し / 現金15%\n来週の金利指標を待つ',
-   points:'・動かないのも戦略\n・収益よりリスク管理',keywords:['投資','資産運用'],
-   audience:'投資1年目の初心者',memo:''}},
-  {id:'c-blog',platformId:'blog',templateId:'blog-invest',title:'2026年8月 投資振り返り',status:'scheduled',
-   publishAt:'2026-08-16T20:00',sourceContentId:null,createdAt:'2026-08-10T09:00',updatedAt:'2026-08-11T21:00',
-   values:{title:'2026年8月 投資振り返り｜動かさない戦略',metaDescription:'防御株維持とETF一部買い増し。現金15%で待つ今週の投資判断。',
-   todaySituation:'今週は防御株の比率を維持。無理に動かさない判断をした。',
-   weeklyChange:'ETFを一部買い増し。現金比率は15%で維持。',assets:'米国株ETF / 防御株 / 現金15%',
-   actions:'ETFの一部買い増し、ニュースチェックのみ',nextWeekPlan:'金利指標を確認しつつ現金比率を維持',
-   message:'投資は「何もしない判断」も大切です。',hashtags:['投資','資産運用']}},
-  {id:'c-x',platformId:'x',templateId:'x-post',title:'今週の投資記録 / X',status:'draft',
-   publishAt:'2026-08-14T20:00',sourceContentId:'c-blog',createdAt:'2026-08-11T10:00',updatedAt:'2026-08-12T09:30',
-   values:{hook:'今週は「攻めない」判断をした。',body:'防御株の比率を維持。\nETFは一部だけ買い増し。\n現金は15%でキープ。',
-   coreMessage:'収益よりリスク管理。',link:'',hashtags:['投資','資産運用']}},
-  {id:'c-ig',platformId:'instagram',templateId:'ig-post',title:'防御株を維持した理由 / Instagram',status:'scheduled',
-   publishAt:'2026-08-15T19:00',sourceContentId:'c-blog',createdAt:'2026-08-11T10:05',updatedAt:'2026-08-12T08:00',
-   values:{coverText:'今週は「攻めない」投資',firstLine:'今週は「攻めすぎない投資」を意識した。',
-   body:'防御株の比率を維持し、ETFは一部だけ買い増し。\n現金は15%で維持して、来週の金利指標を待つ。',
-   image:'',cta:'保存して後で見返してね。',hashtags:['投資記録','資産運用']}},
-  {id:'c-yt',platformId:'youtube',templateId:'yt-script',title:'現金比率15%の理由 / YouTube',status:'review',
-   publishAt:'2026-08-18T20:00',sourceContentId:'c-blog',createdAt:'2026-08-11T10:10',updatedAt:'2026-08-10T22:00',
-   values:{seoTitle:'現金15%維持の理由｜今週の投資',description:'今週の投資判断の振り返り。',
-   thumbnailText:'今週は攻めない',coreContent:'現金15%維持の理由と来週の注目点',
-   chapters:'00:00 オープニング\n01:00 今週の相場観\n03:00 来週の注目点',videoUrl:'',hashtags:['投資']}},
-  {id:'c-th',platformId:'threads',templateId:'threads-post',title:'今週の投資記録 / Threads',status:'draft',
-   publishAt:'',sourceContentId:'c-blog',createdAt:'2026-08-12T10:00',updatedAt:'2026-08-12T10:00',
-   values:{hook:'今週は「攻めない」判断をした。',
-   body:'防御株の比率を維持、ETFは一部だけ買い増し。\n現金は15%でキープして来週の金利指標を待つ。\n何もしないのも戦略。',
-   longText:'',topic:'投資',replyPlan:'1件目の返信で「現金は何%で置いてますか？」と聞く'}}
-]};}
+function seed(){
+  var initialContents = [];
+  var distPlats = PLATFORMS.filter(function(p){return p.id!=='source';});
+  
+  // 각 플랫폼별로 1개씩 초기 샘플 생성
+  distPlats.forEach(function(p, idx){
+    var tpl = defaultTemplateFor(p.id);
+    initialContents.push({
+      id: 'c-' + p.id,
+      platformId: p.id,
+      templateId: tpl.id,
+      title: p.name + ' 샘플 콘텐츠',
+      status: idx === 0 ? 'scheduled' : 'draft',
+      publishAt: idx === 0 ? '2026-08-20T20:00' : '',
+      sourceContentId: null,
+      createdAt: nowISO(),
+      updatedAt: nowISO(),
+      values: {}
+    });
+  });
+
+  // 원본(source) 콘텐츠 1개 추가
+  initialContents.unshift({
+    id: 'c-src',
+    platformId: 'source',
+    templateId: 'source-note',
+    title: '기본 원본 콘텐츠',
+    status: 'draft',
+    publishAt: '',
+    sourceContentId: null,
+    createdAt: nowISO(),
+    updatedAt: nowISO(),
+    values: { topic: '기본 테마', core: '기본 코어 내용' }
+  });
+
+  return { contents: initialContents };
+}
 var db=null;
 (function(){var raw=storeGet(LS_KEY);
   if(raw){try{db=JSON.parse(raw);}catch(e){db=null;}}})();
-if(!db||!Array.isArray(db.contents)){db=seed();storeSet(LS_KEY,JSON.stringify(db));}
+if(!db||!Array.isArray(db.contents)){db=seed();storeSet(LS_KEY,JSON.stringify(db));} else {
+  // 이미 데이터가 있는 경우 각 플랫폼당 1개씩만 남기도록 정제
+  var seenPlatforms = {};
+  var filtered = [];
+  db.contents.forEach(function(c){
+    var key = c.platformId;
+    if(!seenPlatforms[key]){
+      seenPlatforms[key] = true;
+      filtered.push(c);
+    }
+  });
+  db.contents = filtered;
+  save();
+}
 function save(){var ok=storeSet(LS_KEY,JSON.stringify(db));
   if(!ok)toast('保存に失敗しました（画像が大きすぎる可能性）。画像を減らしてください。');
   return ok;}
