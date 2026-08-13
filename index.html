@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>サイト記事管理システム</title>
+<title>B面サイト管理システム</title>
 <style>
 :root{
   --sidew:230px;
@@ -17,7 +17,7 @@
 html,body{height:100%;overflow:hidden}
 body{font-family:'M Rounded 1c','Rounded Mplus 1c','Hiragino Maru Gothic ProN','BIZ UDPGothic','Noto Sans JP',sans-serif;
   background:var(--bg);color:var(--text);font-size:14px;font-weight:600;letter-spacing:-0.01em}
-#app{display:flex;height:100vh}
+#app{display:flex;height:100vh;width:100vw}
 .sidebar{width:var(--sidew);background:linear-gradient(180deg,#fdfbf7,#f4ecdd);
   border-right:2px solid var(--border);
   padding:18px 12px;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;
@@ -117,13 +117,116 @@ textarea.big{min-height:120px}
 .pv-meta{color:#6b7280;font-size:12px;margin-top:10px;border-top:1px solid #e5e7eb;padding-top:8px;font-weight:700}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#fff;border:2px solid var(--border);color:var(--text);padding:12px 20px;border-radius:14px;opacity:0;pointer-events:none;transition:.3s;z-index:99;box-shadow:0 6px 20px rgba(140,120,70,.18);font-weight:800}
 #toast.show{opacity:1}
+
+/* ログイン画面（画面正中央） */
+#loginContainer {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  padding: 32px 28px;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(140,120,70,.15);
+  text-align: center;
+}
+.login-card h2 { margin-bottom: 24px; color: #7a5934; font-weight: 900; font-size: 22px; }
+.login-card input { margin-bottom: 12px; }
+.login-card button { width: 100%; margin-top: 8px; }
+.google-btn { background: #ffffff !important; color: #333 !important; border: 2px solid var(--border) !important; margin-top: 10px !important; }
+
 @media(max-width:900px){.sidebar{display:none}.main{margin-left:0;width:100%}}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <div id="toast"></div>
-<noscript><p style="padding:20px">JavaScript를有効にしてください。</p></noscript>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC8H8KCL7SW62gMqoJna9t_7fpZNIrrgFA",
+    authDomain: "kijikannri-669ad.firebaseapp.com",
+    projectId: "kijikannri-669ad",
+    storageBucket: "kijikannri-669ad.firebasestorage.app",
+    messagingSenderId: "828671956544",
+    appId: "1:828671956544:web:e923387f27370c50fcf1a5",
+    measurementId: "G-KED58QLHFJ"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const auth = getAuth(app);
+  window.fbAuth = auth;
+  window.currentUser = null;
+
+  // ログイン状態のリアルタイム監視
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      window.currentUser = user;
+      initAppLayout();
+    } else {
+      window.currentUser = null;
+      renderLoginScreen();
+    }
+  });
+
+  // メールアドレスでログイン
+  window.loginWithEmail = async function() {
+    const email = document.getElementById('loginEmail').value;
+    const pass = document.getElementById('loginPass').value;
+    if(!email || !pass) { toast('メールアドレスとパスワードを入力してください。'); return; }
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      toast('ログインに成功しました');
+    } catch(err) {
+      toast('ログイン失敗: ' + err.message);
+    }
+  };
+
+  // 新規アカウント登録
+  window.signUpWithEmail = async function() {
+    const email = document.getElementById('loginEmail').value;
+    const pass = document.getElementById('loginPass').value;
+    if(!email || !pass) { toast('メールアドレスとパスワードを入力してください。'); return; }
+    try {
+      await createUserWithEmailAndPassword(auth, email, pass);
+      toast('アカウント登録が完了しました');
+    } catch(err) {
+      toast('登録失敗: ' + err.message);
+    }
+  };
+
+  // Googleアカウントでログイン
+  window.loginWithGoogle = async function() {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      toast('Googleログインに成功しました');
+    } catch(err) {
+      toast('ログイン失敗: ' + err.message);
+    }
+  };
+
+  // ログアウト
+  window.logoutFirebase = function() {
+    signOut(auth).then(() => {
+      toast('ログアウトしました');
+    });
+  };
+</script>
+
 <script>
 window.addEventListener('error',function(e){
   if(e.target && (e.target.tagName === 'IMG' || e.target.tagName === 'LINK')) return;
@@ -134,62 +237,60 @@ window.addEventListener('error',function(e){
 },true);
 </script>
 <script>
-/* ========== 다국어 (i18n) 설정 ========== */
+/* ========== 多言語 (i18n) 設定 ========== */
 var currentLang = storeGet('bmen_lang') || 'ja';
 var LANGS = [
   {id:'ja', label:'🇯🇵 日本語'},
   {id:'en', label:'🇺🇸 English'},
-  {id:'ko', label:'🇰🇷 한국어'},
-  {id:'zh', label:'🇨🇳 中文'},
-  {id:'es', label:'🇪🇸 Español'}
+  {id:'ko', label:'🇰🇷 韓国語'},
+  {id:'zh', label:'🇨🇳 中国語'},
+  {id:'es', label:'🇪🇸 スペイン語'}
 ];
 var i18n = {
   ja: {
-    sysTitle:'サイト記事管理システム', dashboard:'ダッシュボード', source:'元コンテンツ', menuMgmt:'メニュー管理', createContent:'コンテンツ作成',
+    sysTitle:'B面サイト管理システム', dashboard:'ダッシュボード', source:'元コンテンツ', menuMgmt:'メニュー管理', createContent:'コンテンツ作成',
     templates:'テンプレート', publishMgmt:'公開管理', quickLinks:'クイックリンク', settings:'設定', search:'検索', newCreate:'新規作成', createFromTpl:'テンプレートから作成',
     recentContent:'最近のコンテンツ', quickCreate:'クイック作成', manage:'管理', viewAll:'すべて見る', title:'タイトル', platform:'プラットフォーム', template:'テンプレート',
     status:'状態', pubDate:'公開予定日', updateDate:'更新日', action:'操作', delete:'削除', edit:'編集', save:'保存', cancel:'キャンセル', open:'開く',
-    stDraft:'下書き', stReview:'推敲中', stScheduled:'公開予定', stPublished:'公開済み', stArchived:'アーカイブ'
+    stDraft:'下書き', stReview:'推敲中', stScheduled:'公開予定', stPublished:'公開済み', stArchived:'アーカイブ', logout:'ログアウト'
   },
   en: {
     sysTitle:'B-Side CMS', dashboard:'Dashboard', source:'Source Content', menuMgmt:'Menu Mgmt', createContent:'Create Content',
     templates:'Templates', publishMgmt:'Publish Mgmt', quickLinks:'Quick Links', settings:'Settings', search:'Search', newCreate:'New Create', createFromTpl:'From Template',
     recentContent:'Recent Content', quickCreate:'Quick Create', manage:'Manage', viewAll:'View All', title:'Title', platform:'Platform', template:'Template',
     status:'Status', pubDate:'Scheduled Date', updateDate:'Updated Date', action:'Action', delete:'Delete', edit:'Edit', save:'Save', cancel:'Cancel', open:'Open',
-    stDraft:'Draft', stReview:'Reviewing', stScheduled:'Scheduled', stPublished:'Published', stArchived:'Archived'
+    stDraft:'Draft', stReview:'Reviewing', stScheduled:'Scheduled', stPublished:'Published', stArchived:'Archived', logout:'Logout'
   },
   ko: {
-    sysTitle:'B면 사이트 관리 시스템', dashboard:'대시보드', source:'원본 콘텐츠', menuMgmt:'메뉴 관리', createContent:'콘텐츠 작성',
-    templates:'템플릿', publishMgmt:'발행 관리', quickLinks:'퀵 링크', settings:'설정', search:'검색', newCreate:'신규 작성', createFromTpl:'템플릿에서 작성',
-    recentContent:'최근 콘텐츠', quickCreate:'빠른 작성', manage:'관리', viewAll:'전체 보기', title:'제목', platform:'플랫폼', template:'템플릿',
-    status:'상태', pubDate:'발행 예정일', updateDate:'수정일', action:'작업', delete:'삭제', edit:'편집', save:'저장', cancel:'취소', open:'열기',
-    stDraft:'초안', stReview:'검토 중', stScheduled:'발행 예정', stPublished:'발행됨', stArchived:'보관됨'
+    sysTitle:'B面サイト管理システム', dashboard:'ダッシュボード', source:'元コンテンツ', menuMgmt:'メニュー管理', createContent:'コンテンツ作成',
+    templates:'テンプレート', publishMgmt:'公開管理', quickLinks:'クイックリンク', settings:'設定', search:'検索', newCreate:'新規作成', createFromTpl:'テンプレートから作成',
+    recentContent:'最近のコンテンツ', quickCreate:'クイック作成', manage:'管理', viewAll:'すべて見る', title:'タイトル', platform:'プラットフォーム', template:'テンプレート',
+    status:'状態', pubDate:'公開予定日', updateDate:'更新日', action:'操作', delete:'削除', edit:'編集', save:'保存', cancel:'キャンセル', open:'開く',
+    stDraft:'下書き', stReview:'推敲中', stScheduled:'公開予定', stPublished:'公開済み', stArchived:'アーカイブ', logout:'ログアウト'
   },
   zh: {
     sysTitle:'B面网站管理系统', dashboard:'仪表板', source:'源内容', menuMgmt:'菜单管理', createContent:'创建内容',
     templates:'模板', publishMgmt:'发布管理', quickLinks:'快速链接', settings:'设置', search:'搜索', newCreate:'新建内容', createFromTpl:'从模板创建',
     recentContent:'最近内容', quickCreate:'快速创建', manage:'管理', viewAll:'查看全部', title:'标题', platform:'平台', template:'模板',
     status:'状态', pubDate:'预定发布日', updateDate:'更新日期', action:'操作', delete:'删除', edit:'编辑', save:'保存', cancel:'取消', open:'打开',
-    stDraft:'草稿', stReview:'审核中', stScheduled:'已计划', stPublished:'已发布', stArchived:'已归档'
+    stDraft:'草稿', stReview:'审核中', stScheduled:'已计划', stPublished:'已发布', stArchived:'已归档', logout:'退出登录'
   },
   es: {
     sysTitle:'Sistema de Gestión B-Side', dashboard:'Panel', source:'Contenido Origen', menuMgmt:'Gestión Menú', createContent:'Crear Contenido',
     templates:'Plantillas', publishMgmt:'Gestión Publicación', quickLinks:'Enlaces Rápidos', settings:'Configuración', search:'Buscar', newCreate:'Nuevo Crear', createFromTpl:'Desde Plantilla',
     recentContent:'Contenido Reciente', quickCreate:'Creación Rápida', manage:'Gestionar', viewAll:'Ver Todo', title:'Título', platform:'Plataforma', template:'Plantilla',
     status:'Estado', pubDate:'Fecha Programada', updateDate:'Fecha Actualización', action:'Acción', delete:'Eliminar', edit:'Editar', save:'Guardar', cancel:'Cancelar', open:'Abrir',
-    stDraft:'Borrador', stReview:'En Revisión', stScheduled:'Programado', stPublished:'Publicado', stArchived:'Archivado'
+    stDraft:'Borrador', stReview:'En Revisión', stScheduled:'Programado', stPublished:'Publicado', stArchived:'Archivado', logout:'Cerrar Sesión'
   }
 };
 function t(key){ return (i18n[currentLang] && i18n[currentLang][key]) ? i18n[currentLang][key] : (i18n['ja'][key] || key); }
 function changeLang(lang){
   currentLang = lang;
   storeSet('bmen_lang', lang);
-  var appEl = $('#app');
-  if(appEl) appEl.innerHTML = sidebarHTML() + mainLayoutHTML();
-  render();
+  initAppLayout();
 }
 
-/* ========== 데이터 ========== */
+/* ========== データとローカルストレージ ========== */
 var DEFAULT_PLATFORMS=[
   {id:'x',name:'X',color:'#1d9bf0',domain:'x.com'},
   {id:'instagram',name:'Instagram',color:'#ec4899',domain:'instagram.com'},
@@ -370,8 +471,8 @@ function statusOf(id){
 function defaultTemplateFor(pid){var map={x:'x-post',instagram:'ig-post',blog:'blog-post',
   youtube:'yt-script',ririi:'ririi-generic',wakuwaku:'waku-generic',
   note:'note-post',threads:'threads-post',source:'source-note'};
-  var t=findIn(TEMPLATES,map[pid]);
-  if(t)return t;
+  var tpl=findIn(TEMPLATES,map[pid]);
+  if(tpl)return tpl;
   for(var i=0;i<TEMPLATES.length;i++){if(TEMPLATES[i].platform===pid)return TEMPLATES[i];}
   return TEMPLATES[0]||{id:'',name:'',fields:[]};}
 function badge(st){return '<span class="badge st-'+st+'">'+statusOf(st).label+'</span>';}
@@ -431,7 +532,7 @@ function save(){var ok=storeSet(LS_KEY,JSON.stringify(db));
   if(!ok)toast('保存に失敗しました（画像が大きすぎる可能性）。画像を減らしてください。');
   return ok;}
 
-/* ========== 라우ティング ========== */
+/* ========== ルーティング ========== */
 var state={view:'dashboard',platform:null,editId:null,query:'',statusFilter:'all',preview:false,tplDraft:null,linkDraft:null,platDraft:null};
 function nav(v,extra){extra=extra||{};state.view=v;
   if('platform' in extra)state.platform=extra.platform;
@@ -444,7 +545,7 @@ function onSearch(v){state.query=v;
   render();}
 function current(){return findIn(db.contents,state.editId);}
 
-/* ========== 플랫폼 관리 ========== */
+/* ========== プラットフォーム管理 ========== */
 function newPlatform(){
   state.platDraft={id:'plat-'+uid(),name:'',color:'#1d9bf0',domain:''};
   nav('plat-edit');
@@ -511,7 +612,7 @@ function viewPlatformsList(){
     }).join('');
 }
 
-/* ========== 생성/변환 ========== */
+/* ========== 作成/変換 ========== */
 function newContent(pid,tid){return {id:uid(),platformId:pid,templateId:tid,title:'',status:'draft',
   publishAt:'',sourceContentId:null,createdAt:nowISO(),updatedAt:nowISO(),values:{}};}
 function createFromTemplate(tid){var tpl=getTemplate(tid);var c=newContent(tpl.platform,tpl.id);
@@ -567,7 +668,7 @@ function del(id){if(!confirm('削除しますか？'))return;
 function removeTag(cid,key,i){var c=findIn(db.contents,cid);if(!c)return;
   var arr=c.values[key]||[];arr.splice(i,1);c.updatedAt=nowISO();save();render();}
 
-/* ========== 설정 ========== */
+/* ========== 設定 ========== */
 function exportData(){var blob=new Blob([JSON.stringify({contents:db.contents,templates:TEMPLATES,links:LINKLIST,platforms:PLATFORMS},null,2)],{type:'application/json'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='bmen-cms-backup.json';a.click();}
@@ -746,7 +847,7 @@ function aiOptimize(id){
   }).catch(function(err){if(err!=='nokey')toast('AIエラー: '+((err&&err.message)?err.message:err));});
 }
 
-/* ========== 원본 신규 ========== */
+/* ========== 元コンテンツ新規 ========== */
 var newSrc={title:'',csvText:'',csvRows:0,comment:'',images:[]};
 function resetNewSrc(){newSrc={title:'',csvText:'',csvRows:0,comment:'',images:[]};}
 function parseCSV(text){
@@ -865,7 +966,7 @@ function viewNewSource(){
     '</div></div>';
 }
 
-/* ========== 템플릿 편집기 ========== */
+/* ========== テンプレートエディタ ========== */
 function openTplEdit(id){var tpl=findIn(TEMPLATES,id);if(!tpl)return;
   state.tplDraft=clone(tpl);nav('tpl-edit');}
 function newTpl(){state.tplDraft={id:'tpl-'+uid(),platform:'x',name:'',
@@ -954,7 +1055,7 @@ function viewTplEdit(){var d=state.tplDraft;
     '<button class="btn btn-primary" onclick="saveTpl()">'+t('save')+'</button></div>';
   return html;}
 
-/* ========== 자동저장 ========== */
+/* ========== 自動保存 ========== */
 function updateCount(tElement){if(!tElement||!tElement.dataset||!tElement.dataset.f)return;
   var el=document.querySelector('[data-count="'+tElement.dataset.f+'"]');if(!el)return;
   var lim=parseInt(el.getAttribute('data-limit'),10)||0;
@@ -996,7 +1097,7 @@ var toastT=null;
 function toast(msg){var el=$('#toast');if(!el)return;el.textContent=msg;el.classList.add('show');
   if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){el.classList.remove('show');},1800);}
 
-/* ========== 프리뷰 ========== */
+/* ========== プレビュー ========== */
 function pvTags(arr){if(!arr||!arr.length)return '';
   return arr.map(function(tTag){return '<span class="pv-tag">#'+esc(tTag)+'</span>';}).join(' ');}
 function previewHTML(c){var v=c.values||{};var out='';
@@ -1094,7 +1195,7 @@ function previewHTML(c){var v=c.values||{};var out='';
   }
   return out;}
 
-/* ========== 뷰 ========== */
+/* ========== ビュー ========== */
 function getTableHead(){
   return '<tr><th>'+t('title')+'</th><th>'+t('platform')+'</th><th>'+t('template')+'</th><th>'+t('status')+'</th><th>'+t('pubDate')+'</th><th>'+t('updateDate')+'</th></tr>';
 }
@@ -1346,11 +1447,12 @@ function viewSettings(){
   '<div class="card"><div class="sechead">現在のデータ</div>'+
     '<p>コンテンツ数：'+db.contents.length+'件 ／ テンプレート数：'+TEMPLATES.length+'個 ／ リンク数：'+LINKLIST.length+'個</p></div>';}
 
-/* ========== 렌더 ========== */
+/* ========== 描画 ========== */
 var views={dashboard:viewDashboard,source:viewSource,'new-source':viewNewSource,list:viewList,edit:viewEdit,
   'new-platform':viewNewPlatform,'new-template':viewNewTemplate,templates:viewTemplates,'tpl-edit':viewTplEdit,
   publish:viewPublish,links:viewLinks,settings:viewSettings,platforms:viewPlatformsList,'plat-edit':viewPlatformEdit};
 function render(){
+  if(!window.currentUser) return;
   var items=document.querySelectorAll('.menu-item');
   for(var i=0;i<items.length;i++)items[i].classList.remove('active');
   var key='dashboard';
@@ -1397,20 +1499,35 @@ function mainLayoutHTML(){
     '<input id="searchBox" placeholder="'+t('search')+'" oninput="onSearch(this.value)">'+
     '<button class="btn btn-primary" onclick="nav(\'new-platform\')">'+t('newCreate')+'</button>'+
     '<button class="btn btn-outline" onclick="nav(\'new-template\')">'+t('createFromTpl')+'</button>'+
-    '<select id="langSelect" onchange="changeLang(this.value)">'+langOptions+'</select></div>'+
+    '<select id="langSelect" onchange="changeLang(this.value)">'+langOptions+'</select>'+
+    '<button class="btn btn-danger sm" style="margin-left:6px" onclick="logoutFirebase()">'+t('logout')+'</button></div>'+
     '<div id="content"></div>'+
     '<input type="file" id="importFile" accept="application/json" style="display:none" onchange="doImport(this)"></div>';
 }
 
-/* ========== 시작 ========== */
-try{
+function renderLoginScreen(){
+  var appEl = $('#app');
+  if(!appEl) return;
+  appEl.innerHTML = `
+    <div id="loginContainer">
+      <div class="login-card">
+        <h2>B面サイト管理</h2>
+        <input type="email" id="loginEmail" placeholder="メールアドレス" autocomplete="off">
+        <input type="password" id="loginPass" placeholder="パスワード">
+        <button class="btn btn-primary" onclick="loginWithEmail()">ログイン</button>
+        <button class="btn btn-ghost" onclick="signUpWithEmail()">新規登録</button>
+        <button class="btn google-btn" onclick="loginWithGoogle()">Googleアカウントでログイン</button>
+      </div>
+    </div>
+  `;
+}
+
+function initAppLayout(){
   var appEl = $('#app');
   if(appEl){
     appEl.innerHTML=sidebarHTML()+mainLayoutHTML();
   }
   render();
-}catch(e){
-  document.body.innerHTML='<pre style="padding:20px;color:#8c3a3a">初期化エラー: '+e.message+'</pre>';
 }
 </script>
 </body>
