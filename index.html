@@ -125,9 +125,11 @@ textarea.big{min-height:120px}
 <noscript><p style="padding:20px">JavaScriptを有効にしてください。</p></noscript>
 <script>
 window.addEventListener('error',function(e){
+  // Favicon이나 외부 이미지 404 네트워크 에러는 무시
+  if(e.target && (e.target.tagName === 'IMG' || e.target.tagName === 'LINK')) return;
   var p=document.createElement('pre');
   p.style.cssText='position:fixed;top:0;left:0;right:0;background:#f7e6e6;color:#8c3a3a;border-bottom:2px solid #e4c6c6;padding:10px 14px;z-index:999;font-size:13px;font-weight:800;margin:0';
-  p.textContent='エラー: '+e.message+' (行 '+(e.lineno||'')+')';
+  p.textContent='エラー: '+(e.message || 'Unknown Error')+' (行 '+(e.lineno||'')+')';
   document.body.appendChild(p);
 },true);
 </script>
@@ -288,13 +290,13 @@ function saveLink(){var d=state.linkDraft;if(!d)return;
 function autoColor(){var d=state.linkDraft;if(!d)return;
   d.color=pastelFromName(d.name||d.url||'link');render();}
 
-/* ========== 템플릿 ========== */
+/* ========== テンプレート ========== */
 var TEMPLATES=(function(){var raw=storeGet('bmen_templates');
   if(raw){try{var a=JSON.parse(raw);if(a&&a.length)return a;}catch(e){}}
   return clone(BUILTIN_TEMPLATES);})();
 function saveTemplates(){storeSet('bmen_templates',JSON.stringify(TEMPLATES));}
 
-/* ========== 유틸 ========== */
+/* ========== ユーティリティ ========== */
 function $(s){return document.querySelector(s);}
 function esc(s){if(s==null)s='';return String(s).replace(/[&<>"']/g,function(m){
   return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&#34;',"'":'&#39;'}[m];});}
@@ -304,17 +306,17 @@ function nowISO(){return new Date().toISOString().slice(0,16);}
 function fmtDT(iso){if(!iso)return '—';var d=new Date(iso);
   if(isNaN(d.getTime()))return esc(iso);
   return (d.getMonth()+1)+'/'+d.getDate()+' '+pad2(d.getHours())+':'+pad2(d.getMinutes());}
-function findIn(arr,id){for(var i=0;i<arr.length;i++){if(arr[i].id===id)return arr[i];}return null;}
-function getTemplate(id){return findIn(TEMPLATES,id)||TEMPLATES[0];}
-function getPlatform(id){return findIn(PLATFORMS,id)||PLATFORMS[0];}
-function statusOf(id){return findIn(STATUSES,id)||STATUSES[0];}
+function findIn(arr,id){if(!Array.isArray(arr))return null;for(var i=0;i<arr.length;i++){if(arr[i].id===id)return arr[i];}return null;}
+function getTemplate(id){return findIn(TEMPLATES,id)||(TEMPLATES[0]||{id:'',name:'',fields:[]});}
+function getPlatform(id){return findIn(PLATFORMS,id)||(PLATFORMS[0]||{id:'',name:'',color:'#000'});}
+function statusOf(id){return findIn(STATUSES,id)||(STATUSES[0]||{id:'draft',label:'下書き'});}
 function defaultTemplateFor(pid){var map={x:'x-post',instagram:'ig-post',blog:'blog-post',
   youtube:'yt-script',ririi:'ririi-generic',wakuwaku:'waku-generic',
   note:'note-post',threads:'threads-post',source:'source-note'};
   var t=findIn(TEMPLATES,map[pid]);
   if(t)return t;
   for(var i=0;i<TEMPLATES.length;i++){if(TEMPLATES[i].platform===pid)return TEMPLATES[i];}
-  return TEMPLATES[0];}
+  return TEMPLATES[0]||{id:'',name:'',fields:[]};}
 function badge(st){return '<span class="badge st-'+st+'">'+statusOf(st).label+'</span>';}
 function pdot(pid){var p=getPlatform(pid);
   return '<span class="plat"><i style="background:'+p.color+'"></i>'+p.name+'</span>';}
@@ -323,7 +325,7 @@ function isSourceItem(c){return c.platformId==='source'||hasDerived(c);}
 function logoHTML(p){
   if(p&&p.domain){
     return '<div class="qlogo">'+
-      '<img src="https://www.google.com/s2/favicons?domain='+p.domain+'&sz=128" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'+
+      '<img src="https://www.google.com/s2/favicons?domain='+p.domain+'&sz=128" onerror="this.style.display=\'none\';if(this.nextElementSibling)this.nextElementSibling.style.display=\'flex\'">'+
       '<span class="qfall" style="display:none;background:'+p.color+';align-items:center;justify-content:center">'+esc((p.name||'?').charAt(0))+'</span></div>';
   }
   var col=(p&&p.color)?p.color:'#94a3b8';
@@ -460,6 +462,7 @@ function createFromTemplate(tid){var t=getTemplate(tid);var c=newContent(t.platf
 function createFromPlatform(pid){var c=newContent(pid,defaultTemplateFor(pid).id);
   db.contents.unshift(c);save();toast('作成画面を開きました');openEdit(c.id);}
 function gatherText(c){var t=getTemplate(c.templateId);var parts=[];
+  if(!t || !t.fields) return '';
   for(var i=0;i<t.fields.length;i++){var f=t.fields[i];var v=c.values[f.key];
     if(v&&f.type!=='image'&&f.type!=='url'&&f.type!=='tags')parts.push(String(v));}
   return parts.join('\n');}
@@ -484,6 +487,7 @@ function convertTo(srcId,pid){var src=findIn(db.contents,srcId);if(!src)return;
     sourceContentId:src.id,createdAt:nowISO(),updatedAt:nowISO(),values:v};
   db.contents.unshift(c);save();toast(getPlatform(pid).name+'用の下書きを作成しました');openEdit(c.id);}
 function assembleText(c){var t=getTemplate(c.templateId);var lines=[c.title];
+  if(!t || !t.fields) return c.title || '';
   for(var i=0;i<t.fields.length;i++){var f=t.fields[i];var v=c.values[f.key];if(!v)continue;
     if(f.type==='tags'){lines.push(v.map(function(x){return '#'+x;}).join(' '));}
     else if(f.type!=='image'){lines.push(String(v));}}
@@ -523,8 +527,8 @@ function doImport(el){var f=el.files[0];if(!f)return;var r=new FileReader();
 function resetSeed(){if(!confirm('サンプルデータに戻しますか？'))return;db=seed();save();render();}
 function clearAll(){if(!confirm('全データを消去しますか？'))return;db={contents:[]};save();render();}
 
-/* ========== AI (Gemini) ========== */
-var AI_MODELS_DEFAULT=['gemini-3-flash','gemini-3-flash-preview','gemini-2.5-flash','gemini-2.5-flash-lite','gemini-2.0-flash'];
+/* ========== AI (Gemini) - 모델 업데이트 및 안전 파싱 적용 ========== */
+var AI_MODELS_DEFAULT=['gemini-1.5-flash','gemini-1.5-pro','gemini-2.0-flash'];
 function getAiKey(){return storeGet('bmen_ai_key')||'';}
 function saveAiKey(){var el=document.getElementById('aiKeyInput');if(!el)return;
   storeSet('bmen_ai_key',el.value.trim());toast('APIキーを保存しました');}
@@ -598,14 +602,18 @@ function aiFetch(parts){
         throw new Error(msg);}
       storeSet('bmen_ai_last_ok',model);
       var t='';
-      try{t=j.candidates[0].content.parts.map(function(p){return p.text;}).join('');}
-      catch(e){throw new Error('応答形式が不正です');}
+      try{
+        if(j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts){
+          t=j.candidates[0].content.parts.map(function(p){return p.text||'';}).join('');
+        }
+      }catch(e){throw new Error('応答形式が不正です');}
       return t;});
   }
   return tryNext(0);
 }
 function aiCall(prompt){return aiFetch([{text:prompt}]);}
 function parseAiJson(txt){
+  if(!txt) return null;
   try{return JSON.parse(txt);}catch(e){}
   var a=txt.indexOf('{'),b=txt.lastIndexOf('}');
   if(a>-1&&b>a){try{return JSON.parse(txt.slice(a,b+1));}catch(e){}}
@@ -800,7 +808,7 @@ function viewNewSource(){
     '</div></div>';
 }
 
-/* ========== 템플릿 편집기 ========== */
+/* ========== テンプレート編集器 ========== */
 function openTplEdit(id){var t=findIn(TEMPLATES,id);if(!t)return;
   state.tplDraft=clone(t);nav('tpl-edit');}
 function newTpl(){state.tplDraft={id:'tpl-'+uid(),platform:'x',name:'',
@@ -897,6 +905,7 @@ function updateCount(t){if(!t||!t.dataset||!t.dataset.f)return;
   el.textContent=len+'/'+lim;
   if(len>lim){el.classList.add('over');}else{el.classList.remove('over');}}
 function onAutoSave(e){var t=e.target;if(state.view!=='edit')return;var c=current();if(!c)return;
+  if(!c.values) c.values = {};
   if(t.dataset&&t.dataset.f){c.values[t.dataset.f]=t.value;updateCount(t);}
   else if(t.dataset&&t.dataset.sys){c[t.dataset.sys]=t.value;}
   else{return;}
@@ -908,15 +917,18 @@ document.addEventListener('keydown',function(e){
   if(!t||!t.classList||!t.classList.contains('tag-input'))return;
   var c=current();if(!c)return;var key=t.dataset.tags;
   if(e.key==='Enter'||e.key===','){e.preventDefault();
+    if(!c.values) c.values = {};
     var arr=c.values[key]||(c.values[key]=[]);
     var tpl=getTemplate(c.templateId);var fd=null;
-    for(var i=0;i<tpl.fields.length;i++){if(tpl.fields[i].key===key){fd=tpl.fields[i];break;}}
+    if(tpl && tpl.fields){
+      for(var i=0;i<tpl.fields.length;i++){if(tpl.fields[i].key===key){fd=tpl.fields[i];break;}}
+    }
     if(fd&&fd.maxTags&&arr.length>=fd.maxTags){toast('タグは最大'+fd.maxTags+'個まで');return;}
     var val=t.value.trim().replace(/^#/,'');
     if(val&&arr.indexOf(val)===-1){arr.push(val);c.updatedAt=nowISO();save();render();}
     else{t.value='';}}
   else if(e.key==='Backspace'&&t.value===''){
-    var arr2=c.values[key]||[];
+    var arr2=(c.values&&c.values[key])||[];
     if(arr2.length){arr2.pop();c.updatedAt=nowISO();save();render();}}
 });
 var flashT=null;
@@ -924,7 +936,7 @@ function flashSaved(){var el=$('#saveFlash');if(!el)return;
   el.textContent='✓ 自動保存 '+fmtDT(nowISO());el.classList.add('on');
   if(flashT)clearTimeout(flashT);flashT=setTimeout(function(){el.classList.remove('on');},1200);}
 var toastT=null;
-function toast(msg){var el=$('#toast');el.textContent=msg;el.classList.add('show');
+function toast(msg){var el=$('#toast');if(!el)return;el.textContent=msg;el.classList.add('show');
   if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){el.classList.remove('show');},1800);}
 
 /* ========== 프리뷰 ========== */
@@ -1004,10 +1016,10 @@ function previewHTML(c){var v=c.values||{};var out='';
     var t0=getTemplate(c.templateId);
     out='<div class="pv-light"><h1 style="font-size:22px;margin-bottom:6px">'+esc(v.title||c.title||'')+'</h1>'+
     '<div style="color:#6b7280;font-size:13px;margin-bottom:10px">'+esc(v.metaDescription||'')+'</div>'+
-    t0.fields.map(function(f){
+    ((t0&&t0.fields)?t0.fields.map(function(f){
       if(!v[f.key])return '';
       if(f.key==='title'||f.key==='metaDescription'||f.type==='tags'||f.type==='image')return '';
-      return '<div style="margin:10px 0"><b style="font-size:13px">'+esc(f.label)+'</b><div style="white-space:pre-wrap;margin-top:4px">'+esc(v[f.key])+'</div></div>';}).join('')+
+      return '<div style="margin:10px 0"><b style="font-size:13px">'+esc(f.label)+'</b><div style="white-space:pre-wrap;margin-top:4px">'+esc(v[f.key])+'</div></div>';}).join(''):'')+
     '<div style="margin-top:10px">'+pvTags(v.hashtags)+'</div></div>';
   }else if(c.platformId==='blog'){
     out='<div class="pv-light"><h1 style="font-size:22px;margin-bottom:6px">'+esc(v.title||c.title||'')+'</h1>'+
@@ -1110,7 +1122,9 @@ function viewList(){var items=db.contents
     '</select></div>'+
     '<div class="card"><table class="tbl">'+tableHead+'<th>操作</th>'+contentRows(items,true)+'</table></div>';}
 
-function fieldHTML(c,f){var v=c.values[f.key];var req=f.required?' <span class="req">*</span>':'';
+function fieldHTML(c,f){
+  var v=(c.values && c.values[f.key]) ? c.values[f.key] : '';
+  var req=f.required?' <span class="req">*</span>':'';
   var help=f.help?'<div class="help">'+esc(f.help)+'</div>':'';
   var counter=function(val){if(!f.limit)return '';
     var len=(val||'').length;
@@ -1118,7 +1132,7 @@ function fieldHTML(c,f){var v=c.values[f.key];var req=f.required?' <span class="
   if(f.type==='textarea'){return '<div class="field"><label>'+esc(f.label)+req+'</label>'+
     '<textarea data-f="'+f.key+'" class="'+(f.big?'big':'')+'" placeholder="'+esc(f.placeholder||'')+'">'+esc(v||'')+'</textarea>'+
     counter(v)+help+'</div>';}
-  if(f.type==='tags'){var arr=v||[];
+  if(f.type==='tags'){var arr=Array.isArray(v)?v:[];
     return '<div class="field"><label>'+esc(f.label)+req+
     (f.maxTags?' <span class="muted">（最大'+f.maxTags+'個）</span>':'')+'</label>'+
     '<div class="tagbox">'+arr.map(function(t,i){
@@ -1158,12 +1172,13 @@ function viewEdit(){var c=current();
       (derived.length?'<div style="margin-top:8px">派生コンテンツ：'+derived.map(function(d){
         return '<button class="btn btn-ghost sm" onclick="openEdit(\''+d.id+'\')">'+pdot(d.platformId)+' '+(esc(d.title)||'（無題）')+'</button>';}).join(' ')+'</div>':'')+
     '</div>':'')+actions;}
+  var fieldsHTML = (t && t.fields) ? t.fields.map(function(f){return fieldHTML(c,f);}).join('') : '';
   var html=crumb+
   '<div class="card">'+
     '<div class="field full"><label>タイトル（管理用）</label>'+
       '<input data-sys="title" value="'+esc(c.title)+'" placeholder="タイトルを入力"></div>'+
     '<div class="fgrid">'+
-    t.fields.map(function(f){return fieldHTML(c,f);}).join('')+
+    fieldsHTML+
     '<div class="row2 full">'+
       '<div class="field"><label>状態</label><select data-sys="status">'+
         STATUSES.map(function(s){return '<option value="'+s.id+'"'+(c.status===s.id?' selected':'')+'>'+s.label+'</option>';}).join('')+
@@ -1256,7 +1271,7 @@ function viewSettings(){
     '<div class="field" style="margin-top:12px"><label>使用するモデルリスト（上から順に試行・×で選択解除）</label>'+
     '<div class="tagbox" style="margin-bottom:6px">'+chips+'</div>'+
     '<div style="display:flex;gap:6px">'+
-      '<input id="aiModelAdd" placeholder="例: gemini-3-pro" onkeydown="if(event.key===\'Enter\'){addModel();}">'+
+      '<input id="aiModelAdd" placeholder="例: gemini-1.5-pro" onkeydown="if(event.key===\'Enter\'){addModel();}">'+
       '<button class="btn btn-ghost" onclick="addModel()">＋ 追加</button></div>'+
     '<div class="help" style="margin-top:6px">直近成功モデル: '+esc(storeGet('bmen_ai_last_ok')||'（未確定）')+
     ' ／ 成功したモデルは次回から最初に試行されます</div></div></div>'+
@@ -1292,8 +1307,14 @@ function render(){
   var el=document.querySelector('[data-m="'+key+'"]');
   if(el)el.classList.add('active');
   var fn=views[state.view]||viewDashboard;
-  try{$('#content').innerHTML=fn();}
-  catch(err){$('#content').innerHTML='<div class="card">表示エラー: '+esc(err.message)+'</div>';}
+  try{
+    var targetEl = $('#content');
+    if(targetEl) targetEl.innerHTML=fn();
+  }
+  catch(err){
+    var targetEl = $('#content');
+    if(targetEl) targetEl.innerHTML='<div class="card">表示エラー: '+esc(err.message)+'</div>';
+  }
 }
 function sidebarHTML(){var distPlats=PLATFORMS.filter(function(p){return p.id!=='source';});
   return '<div class="sidebar"><div class="logo">B面サイト管理 v12</div>'+
@@ -1310,13 +1331,16 @@ function sidebarHTML(){var distPlats=PLATFORMS.filter(function(p){return p.id!==
 
 /* ========== 시작 ========== */
 try{
-  $('#app').innerHTML=sidebarHTML()+
-    '<div class="main"><div class="topbar"><div class="tb-title">B面サイト管理システム</div>'+
-    '<input id="searchBox" placeholder="検索" oninput="onSearch(this.value)">'+
-    '<button class="btn btn-primary" onclick="nav(\'new-platform\')">新規作成</button>'+
-    '<button class="btn btn-outline" onclick="nav(\'new-template\')">テンプレートから作成</button></div>'+
-    '<div id="content"></div>'+
-    '<input type="file" id="importFile" accept="application/json" style="display:none" onchange="doImport(this)"></div>';
+  var appEl = $('#app');
+  if(appEl){
+    appEl.innerHTML=sidebarHTML()+
+      '<div class="main"><div class="topbar"><div class="tb-title">B面サイト管理システム</div>'+
+      '<input id="searchBox" placeholder="検索" oninput="onSearch(this.value)">'+
+      '<button class="btn btn-primary" onclick="nav(\'new-platform\')">新規作成</button>'+
+      '<button class="btn btn-outline" onclick="nav(\'new-template\')">テンプレートから作成</button></div>'+
+      '<div id="content"></div>'+
+      '<input type="file" id="importFile" accept="application/json" style="display:none" onchange="doImport(this)"></div>';
+  }
   render();
 }catch(e){
   document.body.innerHTML='<pre style="padding:20px;color:#8c3a3a">初期化エラー: '+e.message+'</pre>';
