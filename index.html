@@ -38,7 +38,8 @@ body{font-family:'M Rounded 1c','Rounded Mplus 1c','Hiragino Maru Gothic ProN','
   display:flex;flex-direction:column;padding:16px 22px;overflow:hidden}
 .topbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex:0 0 auto}
 .tb-title{font-size:20px;font-weight:900;flex:1;color:var(--text)}
-#searchBox{width:240px;background:#fdfbf6;border:2px solid var(--border);color:var(--text);border-radius:12px;padding:9px 14px;font-weight:700}
+#searchBox{width:180px;background:#fdfbf6;border:2px solid var(--border);color:var(--text);border-radius:12px;padding:9px 14px;font-weight:700}
+#langSelect{width:120px;background:#fdfbf6;border:2px solid var(--accent);color:var(--text);border-radius:12px;padding:9px 8px;font-weight:800;cursor:pointer}
 .btn{border:none;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:800;cursor:pointer;color:#fff;
   box-shadow:0 3px 0 rgba(140,120,70,.2),0 5px 12px -4px rgba(140,120,70,.3);transition:.15s}
 .btn:hover{transform:translateY(-1px)}
@@ -122,19 +123,73 @@ textarea.big{min-height:120px}
 <body>
 <div id="app"></div>
 <div id="toast"></div>
-<noscript><p style="padding:20px">JavaScriptを有効にしてください。</p></noscript>
+<noscript><p style="padding:20px">JavaScript를有効にしてください。</p></noscript>
 <script>
 window.addEventListener('error',function(e){
-  // Favicon이나 외부 이미지 404 네트워크 에러는 무시
   if(e.target && (e.target.tagName === 'IMG' || e.target.tagName === 'LINK')) return;
   var p=document.createElement('pre');
   p.style.cssText='position:fixed;top:0;left:0;right:0;background:#f7e6e6;color:#8c3a3a;border-bottom:2px solid #e4c6c6;padding:10px 14px;z-index:999;font-size:13px;font-weight:800;margin:0';
-  p.textContent='エラー: '+(e.message || 'Unknown Error')+' (行 '+(e.lineno||'')+')';
+  p.textContent='エラー: '+(e.message||'Unknown Error')+' (行 '+(e.lineno||'')+')';
   document.body.appendChild(p);
 },true);
 </script>
 <script>
-/* ========== データ ========== */
+/* ========== 다국어 (i18n) 설정 ========== */
+var currentLang = storeGet('bmen_lang') || 'ja';
+var LANGS = [
+  {id:'ja', label:'🇯🇵 日本語'},
+  {id:'en', label:'🇺🇸 English'},
+  {id:'ko', label:'🇰🇷 한국어'},
+  {id:'zh', label:'🇨🇳 中文'},
+  {id:'es', label:'🇪🇸 Español'}
+];
+var i18n = {
+  ja: {
+    sysTitle:'B面サイト管理システム', dashboard:'ダッシュボード', source:'元コンテンツ', menuMgmt:'メニュー管理', createContent:'コンテンツ作成',
+    templates:'テンプレート', publishMgmt:'公開管理', quickLinks:'クイックリンク', settings:'設定', search:'検索', newCreate:'新規作成', createFromTpl:'テンプレートから作成',
+    recentContent:'最近のコンテンツ', quickCreate:'クイック作成', manage:'管理', viewAll:'すべて見る', title:'タイトル', platform:'プラットフォーム', template:'テンプレート',
+    status:'状態', pubDate:'公開予定日', updateDate:'更新日', action:'操作', delete:'削除', edit:'編集', save:'保存', cancel:'キャンセル', open:'開く',
+    stDraft:'下書き', stReview:'推敲中', stScheduled:'公開予定', stPublished:'公開済み', stArchived:'アーカイブ'
+  },
+  en: {
+    sysTitle:'B-Side CMS', dashboard:'Dashboard', source:'Source Content', menuMgmt:'Menu Mgmt', createContent:'Create Content',
+    templates:'Templates', publishMgmt:'Publish Mgmt', quickLinks:'Quick Links', settings:'Settings', search:'Search', newCreate:'New Create', createFromTpl:'From Template',
+    recentContent:'Recent Content', quickCreate:'Quick Create', manage:'Manage', viewAll:'View All', title:'Title', platform:'Platform', template:'Template',
+    status:'Status', pubDate:'Scheduled Date', updateDate:'Updated Date', action:'Action', delete:'Delete', edit:'Edit', save:'Save', cancel:'Cancel', open:'Open',
+    stDraft:'Draft', stReview:'Reviewing', stScheduled:'Scheduled', stPublished:'Published', stArchived:'Archived'
+  },
+  ko: {
+    sysTitle:'B면 사이트 관리 시스템', dashboard:'대시보드', source:'원본 콘텐츠', menuMgmt:'메뉴 관리', createContent:'콘텐츠 작성',
+    templates:'템플릿', publishMgmt:'발행 관리', quickLinks:'퀵 링크', settings:'설정', search:'검색', newCreate:'신규 작성', createFromTpl:'템플릿에서 작성',
+    recentContent:'최근 콘텐츠', quickCreate:'빠른 작성', manage:'관리', viewAll:'전체 보기', title:'제목', platform:'플랫폼', template:'템플릿',
+    status:'상태', pubDate:'발행 예정일', updateDate:'수정일', action:'작업', delete:'삭제', edit:'편집', save:'저장', cancel:'취소', open:'열기',
+    stDraft:'초안', stReview:'검토 중', stScheduled:'발행 예정', stPublished:'발행됨', stArchived:'보관됨'
+  },
+  zh: {
+    sysTitle:'B面网站管理系统', dashboard:'仪表板', source:'源内容', menuMgmt:'菜单管理', createContent:'创建内容',
+    templates:'模板', publishMgmt:'发布管理', quickLinks:'快速链接', settings:'设置', search:'搜索', newCreate:'新建内容', createFromTpl:'从模板创建',
+    recentContent:'最近内容', quickCreate:'快速创建', manage:'管理', viewAll:'查看全部', title:'标题', platform:'平台', template:'模板',
+    status:'状态', pubDate:'预定发布日', updateDate:'更新日期', action:'操作', delete:'删除', edit:'编辑', save:'保存', cancel:'取消', open:'打开',
+    stDraft:'草稿', stReview:'审核中', stScheduled:'已计划', stPublished:'已发布', stArchived:'已归档'
+  },
+  es: {
+    sysTitle:'Sistema de Gestión B-Side', dashboard:'Panel', source:'Contenido Origen', menuMgmt:'Gestión Menú', createContent:'Crear Contenido',
+    templates:'Plantillas', publishMgmt:'Gestión Publicación', quickLinks:'Enlaces Rápidos', settings:'Configuración', search:'Buscar', newCreate:'Nuevo Crear', createFromTpl:'Desde Plantilla',
+    recentContent:'Contenido Reciente', quickCreate:'Creación Rápida', manage:'Gestionar', viewAll:'Ver Todo', title:'Título', platform:'Plataforma', template:'Plantilla',
+    status:'Estado', pubDate:'Fecha Programada', updateDate:'Fecha Actualización', action:'Acción', delete:'Eliminar', edit:'Editar', save:'Guardar', cancel:'Cancelar', open:'Abrir',
+    stDraft:'Borrador', stReview:'En Revisión', stScheduled:'Programado', stPublished:'Publicado', stArchived:'Archivado'
+  }
+};
+function t(key){ return (i18n[currentLang] && i18n[currentLang][key]) ? i18n[currentLang][key] : (i18n['ja'][key] || key); }
+function changeLang(lang){
+  currentLang = lang;
+  storeSet('bmen_lang', lang);
+  var appEl = $('#app');
+  if(appEl) appEl.innerHTML = sidebarHTML() + mainLayoutHTML();
+  render();
+}
+
+/* ========== 데이터 ========== */
 var DEFAULT_PLATFORMS=[
   {id:'x',name:'X',color:'#1d9bf0',domain:'x.com'},
   {id:'instagram',name:'Instagram',color:'#ec4899',domain:'instagram.com'},
@@ -161,11 +216,11 @@ function savePlatforms(){storeSet('bmen_platforms',JSON.stringify(PLATFORMS));}
 
 var DERIV_PLATFORMS=function(){return PLATFORMS.filter(function(p){return p.id!=='source';}).map(function(p){return p.id;});};
 var STATUSES=[
-  {id:'draft',label:'下書き'},
-  {id:'review',label:'推敲中'},
-  {id:'scheduled',label:'公開予定'},
-  {id:'published',label:'公開済み'},
-  {id:'archived',label:'アーカイブ'}
+  {id:'draft',label:'stDraft'},
+  {id:'review',label:'stReview'},
+  {id:'scheduled',label:'stScheduled'},
+  {id:'published',label:'stPublished'},
+  {id:'archived',label:'stArchived'}
 ];
 var DEFAULT_LINKS=[
   {id:'x',name:'X',url:'https://x.com',color:'#1d9bf0',domain:'x.com'},
@@ -259,7 +314,6 @@ var BUILTIN_TEMPLATES=[
 ];
 var LS_KEY='bmen_cms_v1';
 
-/* ========== 링크(커스텀 가능) ========== */
 var LINKLIST=(function(){var raw=storeGet('bmen_links');
   if(raw){try{var a=JSON.parse(raw);if(a&&a.length!==undefined)return a;}catch(e){}}
   return clone(DEFAULT_LINKS);})();
@@ -309,7 +363,10 @@ function fmtDT(iso){if(!iso)return '—';var d=new Date(iso);
 function findIn(arr,id){if(!Array.isArray(arr))return null;for(var i=0;i<arr.length;i++){if(arr[i].id===id)return arr[i];}return null;}
 function getTemplate(id){return findIn(TEMPLATES,id)||(TEMPLATES[0]||{id:'',name:'',fields:[]});}
 function getPlatform(id){return findIn(PLATFORMS,id)||(PLATFORMS[0]||{id:'',name:'',color:'#000'});}
-function statusOf(id){return findIn(STATUSES,id)||(STATUSES[0]||{id:'draft',label:'下書き'});}
+function statusOf(id){
+  var st = findIn(STATUSES,id) || STATUSES[0];
+  return { id: st.id, label: t(st.label) };
+}
 function defaultTemplateFor(pid){var map={x:'x-post',instagram:'ig-post',blog:'blog-post',
   youtube:'yt-script',ririi:'ririi-generic',wakuwaku:'waku-generic',
   note:'note-post',threads:'threads-post',source:'source-note'};
@@ -374,7 +431,7 @@ function save(){var ok=storeSet(LS_KEY,JSON.stringify(db));
   if(!ok)toast('保存に失敗しました（画像が大きすぎる可能性）。画像を減らしてください。');
   return ok;}
 
-/* ========== 라우팅 ========== */
+/* ========== 라우ティング ========== */
 var state={view:'dashboard',platform:null,editId:null,query:'',statusFilter:'all',preview:false,tplDraft:null,linkDraft:null,platDraft:null};
 function nav(v,extra){extra=extra||{};state.view=v;
   if('platform' in extra)state.platform=extra.platform;
@@ -387,7 +444,7 @@ function onSearch(v){state.query=v;
   render();}
 function current(){return findIn(db.contents,state.editId);}
 
-/* ========== 플랫폼 관리 기능 ========== */
+/* ========== 플랫폼 관리 ========== */
 function newPlatform(){
   state.platDraft={id:'plat-'+uid(),name:'',color:'#1d9bf0',domain:''};
   nav('plat-edit');
@@ -421,11 +478,11 @@ function delPlatform(id){
 function viewPlatformEdit(){
   var d=state.platDraft;
   if(!d)return '<div class="card">プラットフォーム情報が見つかりません</div>';
-  return '<div class="crumb"><button class="btn btn-ghost" onclick="nav(\'platforms\')">← プラットフォーム管理</button>'+
+  return '<div class="crumb"><button class="btn btn-ghost" onclick="nav(\'platforms\')">← '+t('menuMgmt')+'</button>'+
     '<span class="muted">'+esc(d.id)+'</span>'+
     '<div style="margin-left:auto;display:flex;gap:6px">'+
-    '<button class="btn btn-danger" onclick="delPlatform(\''+d.id+'\')">削除</button>'+
-    '<button class="btn btn-primary" onclick="savePlatform()">保存</button></div></div>'+
+    '<button class="btn btn-danger" onclick="delPlatform(\''+d.id+'\')">'+t('delete')+'</button>'+
+    '<button class="btn btn-primary" onclick="savePlatform()">'+t('save')+'</button></div></div>'+
   '<div class="card"><div class="row2">'+
     '<div class="field"><label>プラットフォーム名 <span class="req">*</span></label>'+
       '<input value="'+esc(d.name)+'" oninput="state.platDraft.name=this.value" placeholder="例：TikTok"></div>'+
@@ -438,32 +495,32 @@ function viewPlatformEdit(){
     '<div class="field"><label>ドメイン</label>'+
       '<input value="'+esc(d.domain||'')+'" oninput="state.platDraft.domain=this.value" placeholder="tiktok.com"></div>'+
   '</div>'+
-  '<div class="actions"><button class="btn btn-primary" onclick="savePlatform()">保存</button></div></div>';
+  '<div class="actions"><button class="btn btn-primary" onclick="savePlatform()">'+t('save')+'</button></div></div>';
 }
 function viewPlatformsList(){
   var editablePlats=PLATFORMS.filter(function(p){return p.id!=='source';});
-  return '<div class="sechead big">コンテンツ作成メニュー管理 <span class="muted">'+editablePlats.length+'件</span>'+
+  return '<div class="sechead big">'+t('menuMgmt')+' <span class="muted">'+editablePlats.length+'</span>'+
     '<button class="btn btn-primary" style="margin-left:auto" onclick="newPlatform()">＋ プラットフォーム追加</button></div>'+
     '<p class="muted" style="margin-bottom:12px">左側のコンテンツ作成に表示される項目（プラットフォーム）の追加や削除を行えます。</p>'+
     editablePlats.map(function(p){
       return '<div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:8px">'+
         logoHTML(p)+
         '<div style="flex:1"><div class="qname">'+esc(p.name)+'</div><div class="muted" style="font-size:11px">ID: '+esc(p.id)+'</div></div>'+
-        '<button class="btn btn-ghost sm" onclick="editPlatform(\''+p.id+'\')">編集</button>'+
-        '<button class="btn btn-danger sm" onclick="delPlatform(\''+p.id+'\')">削除</button></div>';
+        '<button class="btn btn-ghost sm" onclick="editPlatform(\''+p.id+'\')">'+t('edit')+'</button>'+
+        '<button class="btn btn-danger sm" onclick="delPlatform(\''+p.id+'\')">'+t('delete')+'</button></div>';
     }).join('');
 }
 
 /* ========== 생성/변환 ========== */
 function newContent(pid,tid){return {id:uid(),platformId:pid,templateId:tid,title:'',status:'draft',
   publishAt:'',sourceContentId:null,createdAt:nowISO(),updatedAt:nowISO(),values:{}};}
-function createFromTemplate(tid){var t=getTemplate(tid);var c=newContent(t.platform,t.id);
+function createFromTemplate(tid){var tpl=getTemplate(tid);var c=newContent(tpl.platform,tpl.id);
   db.contents.unshift(c);save();toast('作成画面を開きました');openEdit(c.id);}
 function createFromPlatform(pid){var c=newContent(pid,defaultTemplateFor(pid).id);
   db.contents.unshift(c);save();toast('作成画面を開きました');openEdit(c.id);}
-function gatherText(c){var t=getTemplate(c.templateId);var parts=[];
-  if(!t || !t.fields) return '';
-  for(var i=0;i<t.fields.length;i++){var f=t.fields[i];var v=c.values[f.key];
+function gatherText(c){var tpl=getTemplate(c.templateId);var parts=[];
+  if(!tpl || !tpl.fields) return '';
+  for(var i=0;i<tpl.fields.length;i++){var f=tpl.fields[i];var v=c.values[f.key];
     if(v&&f.type!=='image'&&f.type!=='url'&&f.type!=='tags')parts.push(String(v));}
   return parts.join('\n');}
 function convertTo(srcId,pid){var src=findIn(db.contents,srcId);if(!src)return;
@@ -486,9 +543,9 @@ function convertTo(srcId,pid){var src=findIn(db.contents,srcId);if(!src)return;
   var c={id:uid(),platformId:pid,templateId:tpl.id,title:src.title||src.values.topic||'',status:'draft',publishAt:'',
     sourceContentId:src.id,createdAt:nowISO(),updatedAt:nowISO(),values:v};
   db.contents.unshift(c);save();toast(getPlatform(pid).name+'用の下書きを作成しました');openEdit(c.id);}
-function assembleText(c){var t=getTemplate(c.templateId);var lines=[c.title];
-  if(!t || !t.fields) return c.title || '';
-  for(var i=0;i<t.fields.length;i++){var f=t.fields[i];var v=c.values[f.key];if(!v)continue;
+function assembleText(c){var tpl=getTemplate(c.templateId);var lines=[c.title];
+  if(!tpl || !tpl.fields) return c.title || '';
+  for(var i=0;i<tpl.fields.length;i++){var f=tpl.fields[i];var v=c.values[f.key];if(!v)continue;
     if(f.type==='tags'){lines.push(v.map(function(x){return '#'+x;}).join(' '));}
     else if(f.type!=='image'){lines.push(String(v));}}
   return lines.join('\n');}
@@ -527,7 +584,7 @@ function doImport(el){var f=el.files[0];if(!f)return;var r=new FileReader();
 function resetSeed(){if(!confirm('サンプルデータに戻しますか？'))return;db=seed();save();render();}
 function clearAll(){if(!confirm('全データを消去しますか？'))return;db={contents:[]};save();render();}
 
-/* ========== AI (Gemini) - 모델 업데이트 및 안전 파싱 적용 ========== */
+/* ========== AI (Gemini) ========== */
 var AI_MODELS_DEFAULT=['gemini-1.5-flash','gemini-1.5-pro','gemini-2.0-flash'];
 function getAiKey(){return storeGet('bmen_ai_key')||'';}
 function saveAiKey(){var el=document.getElementById('aiKeyInput');if(!el)return;
@@ -601,13 +658,13 @@ function aiFetch(parts){
         if(/no longer available|not found|not exist|deprecated|404|permission/i.test(msg))return tryNext(i+1);
         throw new Error(msg);}
       storeSet('bmen_ai_last_ok',model);
-      var t='';
+      var textContent='';
       try{
         if(j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts){
-          t=j.candidates[0].content.parts.map(function(p){return p.text||'';}).join('');
+          textContent=j.candidates[0].content.parts.map(function(p){return p.text||'';}).join('');
         }
       }catch(e){throw new Error('応答形式が不正です');}
-      return t;});
+      return textContent;});
   }
   return tryNext(0);
 }
@@ -758,8 +815,8 @@ function aiSourceDraft(){
   newSrc.images.forEach(function(im){
     if(im.b64)parts.push({inlineData:{mimeType:im.mime||'image/png',data:im.b64}});});
   toast('AIで初案を作成中…');
-  aiFetch(parts).then(function(t){
-    var obj=parseAiJson(t);
+  aiFetch(parts).then(function(tContent){
+    var obj=parseAiJson(tContent);
     if(!obj){toast('AI応答を解析できませんでした');return;}
     var c=newContent('source','source-note');
     c.title=title;
@@ -803,14 +860,14 @@ function viewNewSource(){
     '<div class="field"><label>自分のコメント（考え・感想・伝えたいこと）</label>'+
       '<textarea class="big" oninput="newSrc.comment=this.value" placeholder="今週は守り重視。ETFを少しだけ買い増した…など自由に書いてください">'+esc(newSrc.comment)+'</textarea></div>'+
     '<div class="actions">'+
-      '<button class="btn btn-primary" onclick="createSourceDraft(false)">下書きを作成</button>'+
+      '<button class="btn btn-primary" onclick="createSourceDraft(false)">'+t('stDraft')+'を作成</button>'+
       '<button class="btn btn-outline" onclick="createSourceDraft(true)">✨ AIで初案を作成</button>'+
     '</div></div>';
 }
 
-/* ========== テンプレート編集器 ========== */
-function openTplEdit(id){var t=findIn(TEMPLATES,id);if(!t)return;
-  state.tplDraft=clone(t);nav('tpl-edit');}
+/* ========== 템플릿 편집기 ========== */
+function openTplEdit(id){var tpl=findIn(TEMPLATES,id);if(!tpl)return;
+  state.tplDraft=clone(tpl);nav('tpl-edit');}
 function newTpl(){state.tplDraft={id:'tpl-'+uid(),platform:'x',name:'',
   fields:[{key:'body',label:'本文',type:'textarea',required:true}]};
   nav('tpl-edit');}
@@ -820,7 +877,7 @@ function tplAddField(){var d=state.tplDraft;if(!d)return;
   d.fields.push({key:'field'+(d.fields.length+1),label:'新しいフィールド',type:'text'});render();}
 function tplMove(i,dir){var d=state.tplDraft;if(!d)return;
   var j=i+dir;if(j<0||j>=d.fields.length)return;
-  var t=d.fields[i];d.fields[i]=d.fields[j];d.fields[j]=t;render();}
+  var tpl=d.fields[i];d.fields[i]=d.fields[j];d.fields[j]=tpl;render();}
 function tplDelField(i){var d=state.tplDraft;if(!d)return;
   if(d.fields.length<=1){toast('フィールドは最低1つ必要です');return;}
   d.fields.splice(i,1);render();}
@@ -852,11 +909,11 @@ function delTpl(id){
 function viewTplEdit(){var d=state.tplDraft;
   if(!d)return '<div class="card">テンプレートが見つかりません</div>';
   var types=['text','textarea','url','tags','image'];
-  var html='<div class="crumb"><button class="btn btn-ghost" onclick="nav(\'templates\')">← テンプレート一覧</button>'+
+  var html='<div class="crumb"><button class="btn btn-ghost" onclick="nav(\'templates\')">← '+t('templates')+'</button>'+
     '<span class="muted">'+esc(d.id)+'</span>'+
     '<div style="margin-left:auto;display:flex;gap:6px">'+
-    '<button class="btn btn-danger" onclick="delTpl(\''+d.id+'\')">削除</button>'+
-    '<button class="btn btn-primary" onclick="saveTpl()">保存</button></div></div>'+
+    '<button class="btn btn-danger" onclick="delTpl(\''+d.id+'\')">'+t('delete')+'</button>'+
+    '<button class="btn btn-primary" onclick="saveTpl()">'+t('save')+'</button></div></div>'+
   '<div class="card"><div class="row2">'+
     '<div class="field"><label>テンプレート名</label>'+
       '<input value="'+esc(d.name)+'" oninput="state.tplDraft.name=this.value" placeholder="例：投資記事テンプレート"></div>'+
@@ -868,7 +925,7 @@ function viewTplEdit(){var d=state.tplDraft;
     return '<div class="card"><div class="sechead">フィールド '+(i+1)+
       '<button class="btn btn-ghost sm" onclick="tplMove('+i+',-1)">↑</button>'+
       '<button class="btn btn-ghost sm" onclick="tplMove('+i+',1)">↓</button>'+
-      '<button class="btn btn-danger sm" style="margin-left:auto" onclick="tplDelField('+i+')">削除</button></div>'+
+      '<button class="btn btn-danger sm" style="margin-left:auto" onclick="tplDelField('+i+')">'+t('delete')+'</button></div>'+
     '<div class="row2">'+
       '<div class="field"><label>ラベル（表示名）</label>'+
         '<input value="'+esc(f.label)+'" oninput="tplFieldSet('+i+',\'label\',this.value)"></div>'+
@@ -877,7 +934,7 @@ function viewTplEdit(){var d=state.tplDraft;
     '</div>'+
     '<div class="row2">'+
       '<div class="field"><label>タイプ</label><select onchange="tplFieldSet('+i+',\'type\',this.value);render()">'+
-        types.map(function(t){return '<option value="'+t+'"'+(f.type===t?' selected':'')+'>'+t+'</option>';}).join('')+
+        types.map(function(tType){return '<option value="'+tType+'"'+(f.type===tType?' selected':'')+'>'+tType+'</option>';}).join('')+
       '</select></div>'+
       '<div class="field"><label>文字数上限（0＝無制限）</label>'+
         '<input type="number" value="'+(f.limit||0)+'" oninput="tplFieldSet('+i+',\'limit\',parseInt(this.value)||0)"></div>'+
@@ -894,28 +951,28 @@ function viewTplEdit(){var d=state.tplDraft;
       '<input type="checkbox" style="width:auto" '+(f.required?'checked':'')+
       ' onchange="tplFieldSet('+i+',\'required\',this.checked)"> 必須フィールド</label></div>';}).join('');
   html+='<div class="actions"><button class="btn btn-outline" onclick="tplAddField()">＋ フィールドを追加</button>'+
-    '<button class="btn btn-primary" onclick="saveTpl()">テンプレートを保存</button></div>';
+    '<button class="btn btn-primary" onclick="saveTpl()">'+t('save')+'</button></div>';
   return html;}
 
 /* ========== 자동저장 ========== */
-function updateCount(t){if(!t||!t.dataset||!t.dataset.f)return;
-  var el=document.querySelector('[data-count="'+t.dataset.f+'"]');if(!el)return;
+function updateCount(tElement){if(!tElement||!tElement.dataset||!tElement.dataset.f)return;
+  var el=document.querySelector('[data-count="'+tElement.dataset.f+'"]');if(!el)return;
   var lim=parseInt(el.getAttribute('data-limit'),10)||0;
-  var len=(t.value||'').length;
+  var len=(tElement.value||'').length;
   el.textContent=len+'/'+lim;
   if(len>lim){el.classList.add('over');}else{el.classList.remove('over');}}
-function onAutoSave(e){var t=e.target;if(state.view!=='edit')return;var c=current();if(!c)return;
+function onAutoSave(e){var tElement=e.target;if(state.view!=='edit')return;var c=current();if(!c)return;
   if(!c.values) c.values = {};
-  if(t.dataset&&t.dataset.f){c.values[t.dataset.f]=t.value;updateCount(t);}
-  else if(t.dataset&&t.dataset.sys){c[t.dataset.sys]=t.value;}
+  if(tElement.dataset&&tElement.dataset.f){c.values[tElement.dataset.f]=tElement.value;updateCount(tElement);}
+  else if(tElement.dataset&&tElement.dataset.sys){c[tElement.dataset.sys]=tElement.value;}
   else{return;}
   c.updatedAt=nowISO();save();flashSaved();}
 document.addEventListener('input',onAutoSave);
 document.addEventListener('change',onAutoSave);
 document.addEventListener('keydown',function(e){
-  var t=e.target;
-  if(!t||!t.classList||!t.classList.contains('tag-input'))return;
-  var c=current();if(!c)return;var key=t.dataset.tags;
+  var tElement=e.target;
+  if(!tElement||!tElement.classList||!tElement.classList.contains('tag-input'))return;
+  var c=current();if(!c)return;var key=tElement.dataset.tags;
   if(e.key==='Enter'||e.key===','){e.preventDefault();
     if(!c.values) c.values = {};
     var arr=c.values[key]||(c.values[key]=[]);
@@ -924,10 +981,10 @@ document.addEventListener('keydown',function(e){
       for(var i=0;i<tpl.fields.length;i++){if(tpl.fields[i].key===key){fd=tpl.fields[i];break;}}
     }
     if(fd&&fd.maxTags&&arr.length>=fd.maxTags){toast('タグは最大'+fd.maxTags+'個まで');return;}
-    var val=t.value.trim().replace(/^#/,'');
+    var val=tElement.value.trim().replace(/^#/,'');
     if(val&&arr.indexOf(val)===-1){arr.push(val);c.updatedAt=nowISO();save();render();}
-    else{t.value='';}}
-  else if(e.key==='Backspace'&&t.value===''){
+    else{tElement.value='';}}
+  else if(e.key==='Backspace'&&tElement.value===''){
     var arr2=(c.values&&c.values[key])||[];
     if(arr2.length){arr2.pop();c.updatedAt=nowISO();save();render();}}
 });
@@ -941,11 +998,11 @@ function toast(msg){var el=$('#toast');if(!el)return;el.textContent=msg;el.class
 
 /* ========== 프리뷰 ========== */
 function pvTags(arr){if(!arr||!arr.length)return '';
-  return arr.map(function(t){return '<span class="pv-tag">#'+esc(t)+'</span>';}).join(' ');}
+  return arr.map(function(tTag){return '<span class="pv-tag">#'+esc(tTag)+'</span>';}).join(' ');}
 function previewHTML(c){var v=c.values||{};var out='';
   var name='B面投資記録';var handle='@bmen_log';
   if(c.platformId==='source'){
-    out='<div class="pv-light"><div class="pv-handle">元コンテンツ</div>'+
+    out='<div class="pv-light"><div class="pv-handle">'+t('source')+'</div>'+
     '<h2 style="margin:6px 0;font-size:20px">'+esc(v.topic||c.title||'（無題）')+'</h2>'+
     (v.audience?'<div style="color:#6b7280;font-size:12px;margin-bottom:8px">想定読者：'+esc(v.audience)+'</div>':'')+
     (v.core?'<div class="pv-body">'+esc(v.core)+'</div>':'')+
@@ -956,7 +1013,7 @@ function previewHTML(c){var v=c.values||{};var out='';
     '<div style="margin-top:10px">'+pvTags(v.keywords)+'</div></div>';
   }else if(c.platformId==='x'){
     var text=[v.hook,v.body,v.thread,v.coreMessage].filter(Boolean).join('\n');
-    var tags=(v.hashtags||[]).map(function(t){return '#'+t;}).join(' ');
+    var tags=(v.hashtags||[]).map(function(tTag){return '#'+tTag;}).join(' ');
     var full=text+(tags?'\n'+tags:'')+(v.link?'\n'+v.link:'');
     out='<div class="pv-light"><div style="display:flex;gap:10px;align-items:center">'+
       '<div style="width:38px;height:38px;border-radius:50%;background:#1d9bf0"></div>'+
@@ -1038,7 +1095,10 @@ function previewHTML(c){var v=c.values||{};var out='';
   return out;}
 
 /* ========== 뷰 ========== */
-var tableHead='<tr><th>タイトル</th><th>プラットフォーム</th><th>テンプレート</th><th>状態</th><th>公開予定日</th><th>更新日</th></tr>';
+function getTableHead(){
+  return '<tr><th>'+t('title')+'</th><th>'+t('platform')+'</th><th>'+t('template')+'</th><th>'+t('status')+'</th><th>'+t('pubDate')+'</th><th>'+t('updateDate')+'</th></tr>';
+}
+
 function contentRows(items,withDel){return items.map(function(c){
   return '<tr class="clickable" onclick="openEdit(\''+c.id+'\')">'+
   '<td>'+(c.title?esc(c.title):'<span class="muted">（無題）</span>')+(c.sourceContentId?' <span class="muted">↪</span>':'')+'</td>'+
@@ -1047,7 +1107,7 @@ function contentRows(items,withDel){return items.map(function(c){
   '<td>'+badge(c.status)+'</td>'+
   '<td>'+fmtDT(c.publishAt)+'</td>'+
   '<td class="muted">'+fmtDT(c.updatedAt)+'</td>'+
-  (withDel?'<td style="text-align:right"><button class="btn btn-danger sm" onclick="event.stopPropagation();del(\''+c.id+'\')">削除</button></td>':'')+
+  (withDel?'<td style="text-align:right"><button class="btn btn-danger sm" onclick="event.stopPropagation();del(\''+c.id+'\')">'+t('delete')+'</button></td>':'')+
   '</tr>';}).join('');}
 
 function quickCardsHTML(){
@@ -1055,7 +1115,7 @@ function quickCardsHTML(){
     return '<a class="qcard" href="'+(l.url||'#')+'" target="_blank" rel="noopener" '+
       'style="background:linear-gradient(140deg,'+l.color+'26,#ffffff 70%);border:2px solid '+l.color+'55">'+
       '<div style="display:flex;align-items:center;gap:10px">'+logoHTML(l)+
-      '<div><div class="qname">'+esc(l.name)+'</div><div class="qopen">OPEN ↗</div></div></div>'+
+      '<div><div class="qname">'+esc(l.name)+'</div><div class="qopen">'+t('open')+' ↗</div></div></div>'+
       '</a>';}).join('');}
 
 function platformCardsHTML(){
@@ -1064,30 +1124,30 @@ function platformCardsHTML(){
     return '<div class="qcard pcard" onclick="nav(\'list\',{platform:\''+p.id+'\'})" '+
       'style="background:linear-gradient(140deg,'+p.color+'26,#ffffff 70%);border:2px solid '+p.color+'55">'+
       '<div style="display:flex;align-items:center;gap:10px">'+logoHTML(p)+
-      '<div><div class="qname">'+esc(p.name)+'</div><div class="qopen">コンテンツ管理 ↗</div></div></div>'+
+      '<div><div class="qname">'+esc(p.name)+'</div><div class="qopen">'+t('createContent')+' ↗</div></div></div>'+
       '</div>';}).join('');}
 
 function viewDashboard(){
   var recent=db.contents.slice().sort(function(a,b){return (b.updatedAt||'').localeCompare(a.updatedAt||'');}).slice(0,6);
   return '<div>'+
-    '<div class="sechead" style="margin-top:4px">コンテンツ作成メニュー <button class="btn btn-ghost sm" style="margin-left:auto" onclick="nav(\'platforms\')">管理</button></div>'+
+    '<div class="sechead" style="margin-top:4px">'+t('createContent')+' <button class="btn btn-ghost sm" style="margin-left:auto" onclick="nav(\'platforms\')">'+t('manage')+'</button></div>'+
     '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">'+platformCardsHTML()+'</div>'+
-    '<div class="card"><div class="sechead">最近のコンテンツ'+
-      '<button class="btn btn-ghost sm" style="margin-left:auto" onclick="nav(\'list\',{platform:null})">すべて見る</button></div>'+
-      '<table class="tbl">'+tableHead+contentRows(recent)+'</table></div>'+
-    '<div class="card"><div class="sechead">クイック作成</div><div class="quickbar">'+
-      TEMPLATES.map(function(t){return '<button class="btn btn-outline" onclick="createFromTemplate(\''+t.id+'\')">'+esc(t.name)+'</button>';}).join('')+
+    '<div class="card"><div class="sechead">'+t('recentContent')+
+      '<button class="btn btn-ghost sm" style="margin-left:auto" onclick="nav(\'list\',{platform:null})">'+t('viewAll')+'</button></div>'+
+      '<table class="tbl">'+getTableHead()+contentRows(recent)+'</table></div>'+
+    '<div class="card"><div class="sechead">'+t('quickCreate')+'</div><div class="quickbar">'+
+      TEMPLATES.map(function(tpl){return '<button class="btn btn-outline" onclick="createFromTemplate(\''+tpl.id+'\')">'+esc(tpl.name)+'</button>';}).join('')+
     '</div></div>'+
-    '<div class="sechead" style="margin-top:4px">クイックリンク'+
-      '<button class="btn btn-ghost sm" style="margin-left:auto" onclick="nav(\'links\')">リンク管理</button></div>'+
+    '<div class="sechead" style="margin-top:4px">'+t('quickLinks')+
+      '<button class="btn btn-ghost sm" style="margin-left:auto" onclick="nav(\'links\')">'+t('manage')+'</button></div>'+
     '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:10px">'+quickCardsHTML()+'</div>'+
     '</div>';}
 
 function viewSource(){
   var items=db.contents.filter(isSourceItem)
     .sort(function(a,b){return (b.updatedAt||'').localeCompare(a.updatedAt||'');});
-  var html='<div class="sechead big">元コンテンツ <span class="muted">'+items.length+'件</span>'+
-    '<button class="btn btn-primary" style="margin-left:auto" onclick="nav(\'new-source\')">新規元コンテンツ</button></div>'+
+  var html='<div class="sechead big">'+t('source')+' <span class="muted">'+items.length+'件</span>'+
+    '<button class="btn btn-primary" style="margin-left:auto" onclick="nav(\'new-source\')">新規'+t('source')+'</button></div>'+
   '<p class="muted" style="margin-bottom:12px">新規作成ではCSV・画像・自分のコメントから初案を作れます。'+
   '＋ボタンでルールベース下書き、✨AI一括生成でGeminiが全プラットフォームの下書きを作成します。</p>';
   html+=items.map(function(c){
@@ -1103,8 +1163,8 @@ function viewSource(){
       (c.platformId==='source'?'<span class="plat"><i style="background:#94a3b8"></i>元</span>':pdot(c.platformId))+
       '<span>'+(esc(c.title)||'（無題）')+'</span>'+badge(c.status)+
       '<span class="muted" style="margin-left:auto">'+fmtDT(c.updatedAt)+'</span>'+
-      '<button class="btn btn-ghost sm" onclick="openEdit(\''+c.id+'\')">開く</button>'+
-      '<button class="btn btn-danger sm" onclick="del(\''+c.id+'\')">削除</button></div>'+
+      '<button class="btn btn-ghost sm" onclick="openEdit(\''+c.id+'\')">'+t('open')+'</button>'+
+      '<button class="btn btn-danger sm" onclick="del(\''+c.id+'\')">'+t('delete')+'</button></div>'+
       '<div class="quickbar">'+chips+'</div>'+
       '<div class="quickbar" style="margin-top:8px"><button class="btn btn-primary sm" onclick="aiAll(\''+c.id+'\')">✨ AI一括生成（全プラットフォーム）</button></div></div>';}).join('');
   return html;}
@@ -1114,13 +1174,13 @@ function viewList(){var items=db.contents
   .filter(function(c){return state.statusFilter==='all'?true:c.status===state.statusFilter;})
   .filter(function(c){return state.query?(c.title||'').indexOf(state.query)!==-1:true;})
   .sort(function(a,b){return (b.updatedAt||'').localeCompare(a.updatedAt||'');});
-  var title=state.platform?getPlatform(state.platform).name+' のコンテンツ':'すべてのコンテンツ';
+  var title=state.platform?getPlatform(state.platform).name+' のコンテンツ':t('createContent');
   return '<div class="sechead big">'+title+' <span class="muted">'+items.length+'件</span>'+
     '<select class="filter" onchange="setStatusFilter(this.value)">'+
-      '<option value="all">状態：すべて</option>'+
-      STATUSES.map(function(s){return '<option value="'+s.id+'"'+(state.statusFilter===s.id?' selected':'')+'>'+s.label+'</option>';}).join('')+
+      '<option value="all">'+t('status')+'：すべて</option>'+
+      STATUSES.map(function(s){return '<option value="'+s.id+'"'+(state.statusFilter===s.id?' selected':'')+'>'+t(s.label)+'</option>';}).join('')+
     '</select></div>'+
-    '<div class="card"><table class="tbl">'+tableHead+'<th>操作</th>'+contentRows(items,true)+'</table></div>';}
+    '<div class="card"><table class="tbl">'+getTableHead()+'<th>'+t('action')+'</th>'+contentRows(items,true)+'</table></div>';}
 
 function fieldHTML(c,f){
   var v=(c.values && c.values[f.key]) ? c.values[f.key] : '';
@@ -1135,8 +1195,8 @@ function fieldHTML(c,f){
   if(f.type==='tags'){var arr=Array.isArray(v)?v:[];
     return '<div class="field"><label>'+esc(f.label)+req+
     (f.maxTags?' <span class="muted">（最大'+f.maxTags+'個）</span>':'')+'</label>'+
-    '<div class="tagbox">'+arr.map(function(t,i){
-      return '<span class="chip">#'+esc(t)+'<button class="chipx" onclick="removeTag(\''+c.id+'\',\''+f.key+'\','+i+')">×</button></span>';}).join('')+
+    '<div class="tagbox">'+arr.map(function(tTag,i){
+      return '<span class="chip">#'+esc(tTag)+'<button class="chipx" onclick="removeTag(\''+c.id+'\',\''+f.key+'\','+i+')">×</button></span>';}).join('')+
     '<input class="tag-input" data-tags="'+f.key+'" placeholder="Enterで追加"></div>'+help+'</div>';}
   if(f.type==='image'){return '<div class="field"><label>'+esc(f.label)+'</label>'+
     '<input data-f="'+f.key+'" value="'+esc(v||'')+'" placeholder="https://...">'+
@@ -1147,22 +1207,22 @@ function fieldHTML(c,f){
 
 function viewEdit(){var c=current();
   if(!c)return '<div class="card">コンテンツが見つかりません</div>';
-  var t=getTemplate(c.templateId);
+  var tpl=getTemplate(c.templateId);
   var src=c.sourceContentId?findIn(db.contents,c.sourceContentId):null;
   var derived=db.contents.filter(function(o){return o.sourceContentId===c.id;});
   var targets=PLATFORMS.filter(function(p){return p.id!==c.platformId&&p.id!=='source';});
   var backOnclick=(c.platformId==='source')?'nav(\'source\')':'nav(\'list\',{platform:\''+c.platformId+'\'})';
   var toggle='<div style="margin-left:auto;display:flex;gap:6px">'+
-    '<button class="btn sm '+(!state.preview?'btn-primary':'btn-ghost')+'" onclick="setPreview(false)">編集</button>'+
+    '<button class="btn sm '+(!state.preview?'btn-primary':'btn-ghost')+'" onclick="setPreview(false)">'+t('edit')+'</button>'+
     '<button class="btn sm '+(state.preview?'btn-primary':'btn-ghost')+'" onclick="setPreview(true)">プレビュー</button></div>';
   var crumb='<div class="crumb">'+
     '<button class="btn btn-ghost" onclick="'+backOnclick+'">← 戻る</button>'+
-    pdot(c.platformId)+' <span class="muted">'+esc(t.name)+'</span>'+toggle+'</div>';
+    pdot(c.platformId)+' <span class="muted">'+esc(tpl.name)+'</span>'+toggle+'</div>';
   var actions='<div class="actions">'+
     '<button class="btn btn-primary" onclick="copyText(\''+c.id+'\')">投稿用コピー</button>'+
     '<button class="btn btn-ghost" onclick="aiOptimize(\''+c.id+'\')">✨ AI最適化</button>'+
     targets.map(function(p){return '<button class="btn btn-outline" onclick="convertTo(\''+c.id+'\',\''+p.id+'\')">'+p.name+'用に変換</button>';}).join('')+
-    '<button class="btn btn-danger" style="margin-left:auto" onclick="del(\''+c.id+'\')">削除</button>'+
+    '<button class="btn btn-danger" style="margin-left:auto" onclick="del(\''+c.id+'\')">'+t('delete')+'</button>'+
     '<span id="saveFlash"></span></div>';
   if(state.preview){
     return crumb+
@@ -1172,18 +1232,18 @@ function viewEdit(){var c=current();
       (derived.length?'<div style="margin-top:8px">派生コンテンツ：'+derived.map(function(d){
         return '<button class="btn btn-ghost sm" onclick="openEdit(\''+d.id+'\')">'+pdot(d.platformId)+' '+(esc(d.title)||'（無題）')+'</button>';}).join(' ')+'</div>':'')+
     '</div>':'')+actions;}
-  var fieldsHTML = (t && t.fields) ? t.fields.map(function(f){return fieldHTML(c,f);}).join('') : '';
+  var fieldsHTML = (tpl && tpl.fields) ? tpl.fields.map(function(f){return fieldHTML(c,f);}).join('') : '';
   var html=crumb+
   '<div class="card">'+
-    '<div class="field full"><label>タイトル（管理用）</label>'+
+    '<div class="field full"><label>'+t('title')+'（管理用）</label>'+
       '<input data-sys="title" value="'+esc(c.title)+'" placeholder="タイトルを入力"></div>'+
     '<div class="fgrid">'+
     fieldsHTML+
     '<div class="row2 full">'+
-      '<div class="field"><label>状態</label><select data-sys="status">'+
-        STATUSES.map(function(s){return '<option value="'+s.id+'"'+(c.status===s.id?' selected':'')+'>'+s.label+'</option>';}).join('')+
+      '<div class="field"><label>'+t('status')+'</label><select data-sys="status">'+
+        STATUSES.map(function(s){return '<option value="'+s.id+'"'+(c.status===s.id?' selected':'')+'>'+t(s.label)+'</option>';}).join('')+
       '</select></div>'+
-      '<div class="field"><label>公開予定日</label>'+
+      '<div class="field"><label>'+t('pubDate')+'</label>'+
         '<input type="datetime-local" data-sys="publishAt" value="'+(c.publishAt||'')+'"></div>'+
     '</div></div></div>';
   if(src||derived.length){
@@ -1195,24 +1255,24 @@ function viewEdit(){var c=current();
   return html+actions;}
 
 function viewNewPlatform(){var distPlats=PLATFORMS.filter(function(p){return p.id!=='source';});
-  return '<div class="sechead big">新規作成 — プラットフォームを選択</div>'+
+  return '<div class="sechead big">'+t('newCreate')+' — プラットフォームを選択</div>'+
   '<div class="platgrid">'+distPlats.map(function(p){
     return '<div class="card pcard" onclick="createFromPlatform(\''+p.id+'\')">'+
     pdot(p.id)+'<div class="pname">'+p.name+'</div>'+
     '<div class="muted">'+esc(defaultTemplateFor(p.id).name)+'</div></div>';}).join('')+'</div>';}
 
-function viewNewTemplate(){return '<div class="sechead big">テンプレートから作成</div>'+
-  PLATFORMS.map(function(p){var ts=TEMPLATES.filter(function(t){return t.platform===p.id;});
+function viewNewTemplate(){return '<div class="sechead big">'+t('createFromTpl')+'</div>'+
+  PLATFORMS.map(function(p){var ts=TEMPLATES.filter(function(tpl){return tpl.platform===p.id;});
     if(!ts.length)return '';
     return '<div class="card"><div class="sechead">'+pdot(p.id)+'</div><div class="quickbar">'+
-      ts.map(function(t){return '<button class="btn btn-outline" onclick="createFromTemplate(\''+t.id+'\')">'+esc(t.name)+'</button>';}).join('')+
+      ts.map(function(tpl){return '<button class="btn btn-outline" onclick="createFromTemplate(\''+tpl.id+'\')">'+esc(tpl.name)+'</button>';}).join('')+
     '</div></div>';}).join('');}
 
-function viewTemplates(){return '<div class="sechead big">テンプレート一覧'+
-  '<button class="btn btn-primary" style="margin-left:auto" onclick="newTpl()">＋ 新規テンプレート</button></div>'+
-  TEMPLATES.map(function(t){return '<div class="card"><div class="sechead">'+esc(t.name)+' '+pdot(t.platform)+
-    '<button class="btn btn-ghost sm" style="margin-left:auto" onclick="openTplEdit(\''+t.id+'\')">編集</button></div>'+
-    '<div class="flist">'+t.fields.map(function(f){
+function viewTemplates(){return '<div class="sechead big">'+t('templates')+'一覧'+
+  '<button class="btn btn-primary" style="margin-left:auto" onclick="newTpl()">＋ 新規'+t('templates')+'</button></div>'+
+  TEMPLATES.map(function(tpl){return '<div class="card"><div class="sechead">'+esc(tpl.name)+' '+pdot(tpl.platform)+
+    '<button class="btn btn-ghost sm" style="margin-left:auto" onclick="openTplEdit(\''+tpl.id+'\')">'+t('edit')+'</button></div>'+
+    '<div class="flist">'+tpl.fields.map(function(f){
       return '<div class="frow"><span>'+esc(f.label)+(f.required?' <span class="req">*</span>':'')+
       (f.limit?' <span class="muted">（'+f.limit+'字）</span>':'')+
       (f.maxTags?' <span class="muted">（最大'+f.maxTags+'個）</span>':'')+'</span>'+
@@ -1222,15 +1282,15 @@ function viewTemplates(){return '<div class="sechead big">テンプレート一�
 function viewPublish(){var items=db.contents
   .filter(function(c){return c.status==='scheduled'||c.status==='published';})
   .sort(function(a,b){return (a.publishAt||'9999').localeCompare(b.publishAt||'9999');});
-  return '<div class="sechead big">公開管理 <span class="muted">'+items.length+'件</span></div>'+
-  '<div class="card"><table class="tbl">'+tableHead+contentRows(items)+'</table></div>';}
+  return '<div class="sechead big">'+t('publishMgmt')+' <span class="muted">'+items.length+'件</span></div>'+
+  '<div class="card"><table class="tbl">'+getTableHead()+contentRows(items)+'</table></div>';}
 
 function viewLinks(){
   var d=state.linkDraft;
   var editor='';
   if(d){
     editor='<div class="card" style="border-color:var(--accent)"><div class="sechead">'+(d.id?'リンク編集':'新規リンク')+
-      '<button class="btn btn-ghost sm" style="margin-left:auto" onclick="cancelLink()">キャンセル</button></div>'+
+      '<button class="btn btn-ghost sm" style="margin-left:auto" onclick="cancelLink()">'+t('cancel')+'</button></div>'+
       '<div class="row2">'+
         '<div class="field"><label>名前</label><input value="'+esc(d.name)+'" oninput="state.linkDraft.name=this.value" placeholder="例：X、メモ帳、証券口座…"></div>'+
         '<div class="field"><label>URL</label><input value="'+esc(d.url||'')+'" oninput="state.linkDraft.url=this.value" placeholder="https://..."></div>'+
@@ -1239,7 +1299,7 @@ function viewLinks(){
         '<div class="field"><label>カラー</label><input type="color" value="'+esc(d.color||'#c9a87c')+'" oninput="state.linkDraft.color=this.value"></div>'+
         '<div class="field"><label>ドメイン（ロゴ自動取得用・任意）</label><input value="'+esc(d.domain||'')+'" oninput="state.linkDraft.domain=this.value" placeholder="example.com"></div>'+
       '</div>'+
-      '<div class="quickbar"><button class="btn btn-primary" onclick="saveLink()">保存</button>'+
+      '<div class="quickbar"><button class="btn btn-primary" onclick="saveLink()">'+t('save')+'</button>'+
       '<button class="btn btn-ghost" onclick="autoColor()">🎨 自動パステルカラー</button></div></div>';
   }
   var rows=LINKLIST.map(function(l){
@@ -1247,9 +1307,9 @@ function viewLinks(){
       logoHTML(l)+
       '<div style="flex:1;min-width:0"><div class="qname" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(l.name)+'</div>'+
       '<div class="muted" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(l.url||'URL未設定')+'</div></div>'+
-      '<button class="btn btn-ghost sm" onclick="editLink(\''+l.id+'\')">編集</button>'+
-      '<button class="btn btn-danger sm" onclick="delLink(\''+l.id+'\')">削除</button></div>';}).join('');
-  return '<div class="sechead big">クイックリンク <span class="muted">'+LINKLIST.length+'件</span>'+
+      '<button class="btn btn-ghost sm" onclick="editLink(\''+l.id+'\')">'+t('edit')+'</button>'+
+      '<button class="btn btn-danger sm" onclick="delLink(\''+l.id+'\')">'+t('delete')+'</button></div>';}).join('');
+  return '<div class="sechead big">'+t('quickLinks')+' <span class="muted">'+LINKLIST.length+'件</span>'+
     '<button class="btn btn-primary" style="margin-left:auto" onclick="newLink()">＋ 新規リンク</button></div>'+
     '<p class="muted" style="margin-bottom:10px">追加・編集したリンクはダッシュボードのクイックリンクにすぐ反映されます。</p>'+
     editor+
@@ -1261,7 +1321,7 @@ function viewSettings(){
     ? mList.map(function(m){return '<span class="chip">'+esc(m)+
         '<button class="chipx" onclick="removeModel(\''+esc(m)+'\')">×</button></span>';}).join('')
     : '<span class="muted" style="font-size:12px">（リスト空欄＝既定リストを自動使用）</span>';
-  return '<div class="sechead big">設定</div>'+
+  return '<div class="sechead big">'+t('settings')+'</div>'+
   '<div class="card"><div class="sechead">AI（Gemini）設定</div>'+
     '<p class="muted" style="margin-bottom:8px">Google AI Studio（aistudio.google.com）のAPIキーを入力してください。</p>'+
     '<div class="field"><label>Gemini API Key</label>'+
@@ -1318,28 +1378,35 @@ function render(){
 }
 function sidebarHTML(){var distPlats=PLATFORMS.filter(function(p){return p.id!=='source';});
   return '<div class="sidebar"><div class="logo">B面サイト管理 v12</div>'+
-  '<div class="menu-item" data-m="dashboard" onclick="nav(\'dashboard\')">ダッシュボード</div>'+
-  '<div class="menu-item" data-m="source" onclick="nav(\'source\')">元コンテンツ</div>'+
-  '<div class="menu-item" data-m="platforms" onclick="nav(\'platforms\')">メニュー管理</div>'+
-  '<div class="menu-item" data-m="list-all" onclick="nav(\'list\',{platform:null})">コンテンツ作成</div>'+
+  '<div class="menu-item" data-m="dashboard" onclick="nav(\'dashboard\')">'+t('dashboard')+'</div>'+
+  '<div class="menu-item" data-m="source" onclick="nav(\'source\')">'+t('source')+'</div>'+
+  '<div class="menu-item" data-m="platforms" onclick="nav(\'platforms\')">'+t('menuMgmt')+'</div>'+
+  '<div class="menu-item" data-m="list-all" onclick="nav(\'list\',{platform:null})">'+t('createContent')+'</div>'+
   distPlats.map(function(p){return '<div class="menu-item sub" data-m="list-'+p.id+'" onclick="nav(\'list\',{platform:\''+p.id+'\'})">'+p.name+'</div>';}).join('')+
   '<div class="spec-spacing"></div>'+
-  '<div class="menu-item" data-m="templates" onclick="nav(\'templates\')">テンプレート</div>'+
-  '<div class="menu-item" data-m="publish" onclick="nav(\'publish\')">公開管理</div>'+
-  '<div class="menu-item" data-m="links" onclick="nav(\'links\')">クイックリンク</div>'+
-  '<div class="menu-item" data-m="settings" onclick="nav(\'settings\')">設定</div></div>';}
+  '<div class="menu-item" data-m="templates" onclick="nav(\'templates\')">'+t('templates')+'</div>'+
+  '<div class="menu-item" data-m="publish" onclick="nav(\'publish\')">'+t('publishMgmt')+'</div>'+
+  '<div class="menu-item" data-m="links" onclick="nav(\'links\')">'+t('quickLinks')+'</div>'+
+  '<div class="menu-item" data-m="settings" onclick="nav(\'settings\')">'+t('settings')+'</div></div>';}
+
+function mainLayoutHTML(){
+  var langOptions = LANGS.map(function(l){
+    return '<option value="'+l.id+'"'+(currentLang===l.id?' selected':'')+'>'+l.label+'</option>';
+  }).join('');
+  return '<div class="main"><div class="topbar"><div class="tb-title">'+t('sysTitle')+'</div>'+
+    '<input id="searchBox" placeholder="'+t('search')+'" oninput="onSearch(this.value)">'+
+    '<button class="btn btn-primary" onclick="nav(\'new-platform\')">'+t('newCreate')+'</button>'+
+    '<button class="btn btn-outline" onclick="nav(\'new-template\')">'+t('createFromTpl')+'</button>'+
+    '<select id="langSelect" onchange="changeLang(this.value)">'+langOptions+'</select></div>'+
+    '<div id="content"></div>'+
+    '<input type="file" id="importFile" accept="application/json" style="display:none" onchange="doImport(this)"></div>';
+}
 
 /* ========== 시작 ========== */
 try{
   var appEl = $('#app');
   if(appEl){
-    appEl.innerHTML=sidebarHTML()+
-      '<div class="main"><div class="topbar"><div class="tb-title">B面サイト管理システム</div>'+
-      '<input id="searchBox" placeholder="検索" oninput="onSearch(this.value)">'+
-      '<button class="btn btn-primary" onclick="nav(\'new-platform\')">新規作成</button>'+
-      '<button class="btn btn-outline" onclick="nav(\'new-template\')">テンプレートから作成</button></div>'+
-      '<div id="content"></div>'+
-      '<input type="file" id="importFile" accept="application/json" style="display:none" onchange="doImport(this)"></div>';
+    appEl.innerHTML=sidebarHTML()+mainLayoutHTML();
   }
   render();
 }catch(e){
