@@ -226,6 +226,7 @@ textarea.big{min-height:120px}
   .pv-light { max-width: 100%; padding: 10px; }
 }
 </style>
+<base target="_blank">
 </head>
 <body>
 <div id="app"></div>
@@ -371,10 +372,8 @@ function changeLang(lang){
 var DEFAULT_PLATFORMS=[
   {id:'x',name:'X',color:'#1d9bf0',domain:'x.com'},
   {id:'instagram',name:'Instagram',color:'#ec4899',domain:'instagram.com'},
-  {id:'ririi',name:'りり',color:'#a855f7',domain:''},
   {id:'blog',name:'BLOG',color:'#22c55e',domain:''},
   {id:'youtube',name:'YouTube',color:'#ef4444',domain:'youtube.com'},
-  {id:'wakuwaku',name:'ワクワクメール',color:'#f59e0b',domain:'wakuwaku-mail.com'},
   {id:'note',name:'note',color:'#41c9b4',domain:'note.com'},
   {id:'threads',name:'Threads',color:'#8a94a6',domain:'threads.net'},
   {id:'source',name:'元コンテンツ',color:'#94a3b8',domain:''}
@@ -403,10 +402,8 @@ var STATUSES=[
 var DEFAULT_LINKS=[
   {id:'x',name:'X',url:'https://x.com',color:'#1d9bf0',domain:'x.com'},
   {id:'instagram',name:'Instagram',url:'https://www.instagram.com',color:'#ec4899',domain:'instagram.com'},
-  {id:'ririi',name:'りり',url:'#',color:'#a855f7',domain:''},
   {id:'blog',name:'BLOG',url:'https://example.com',color:'#22c55e',domain:''},
   {id:'youtube',name:'YouTube',url:'https://www.youtube.com',color:'#ef4444',domain:'youtube.com'},
-  {id:'wakuwaku',name:'ワクワクメール',url:'https://wakuwaku-mail.com',color:'#f59e0b',domain:'wakuwaku-mail.com'},
   {id:'note',name:'note',url:'https://note.com',color:'#41c9b4',domain:'note.com'},
   {id:'threads',name:'Threads',url:'https://www.threads.net',color:'#8a94a6',domain:'threads.net'}
 ];
@@ -476,19 +473,6 @@ var BUILTIN_TEMPLATES=[
     {key:'longText',label:'長文添付（任意）',type:'textarea',help:'500字を超える長文は添付テキスト機能で（最大10,000文字・2025年9月〜）'},
     {key:'topic',label:'トピックタグ（1つだけ）',type:'text',help:'ハッシュタグは逆効果。トピックタグを1つだけ'},
     {key:'replyPlan',label:'会話設計（返信のフック）',type:'text',placeholder:'例：1件目の返信で「現金何%ですか？」と聞く',help:'スレッド内に会話を意図的に作ると評価されやすい'}]},
-  {id:'ririi-generic',platform:'ririi',name:'りり投稿テンプレート',fields:[
-    {key:'hook',label:'タイトル／1行目',type:'text',required:true,limit:40},
-    {key:'body',label:'本文',type:'textarea',required:true},
-    {key:'image',label:'イメージ（URL）',type:'image'},
-    {key:'hashtags',label:'ハッシュタグ',type:'tags',maxTags:3},
-    {key:'note',label:'メモ',type:'textarea'}]},
-  {id:'waku-generic',platform:'wakuwaku',name:'ワクワクメール用テンプレート',fields:[
-    {key:'oneLine',label:'一口コメント（最初の30文字）',type:'text',required:true,limit:30,help:'最初の30文字に気合いを入れる。読まれるかの分かれ目'},
-    {key:'selfIntro',label:'自己紹介文',type:'textarea',limit:300,help:'200〜300文字。始めた理由＋趣味＋誠実さ'},
-    {key:'reason',label:'始めた理由',type:'text',help:'軽く添えると好印象'},
-    {key:'hobby',label:'趣味／共通点',type:'text',help:'具体的に書くと共通点が増える'},
-    {key:'photoMemo',label:'写真メモ',type:'text',help:'自然光・明るい場所・顔が分かる写真'},
-    {key:'note',label:'メモ',type:'textarea'}]}
 ];
 var LS_KEY='bmen_cms_v1';
 
@@ -878,7 +862,6 @@ function aiRulesFor(pid){
   if(pid==='blog')return 'BLOG記事。タイトル32字以内、メタディスクリプション70字以内、導入は結論先出し、本文はセクション毎300〜500字、まとめ必須。';
   if(pid==='note')return 'note記事。タイトル15〜25文字、リード文は結論先出し、段落80〜150文字、長い場合は目次、文末にフォロー・スキ案内。';
   if(pid==='youtube')return 'YouTube台本。タイトル30字以内でキーワードを前半に、説明欄は冒頭150文字に要点、サムネイル文言は短く、チャプター付き、ハッシュタグ3〜5個。';
-  if(pid==='wakuwaku')return 'ワクワクメール用プロフィール。一口コメントは最初の30文字に勢い、自己紹介は200〜300文字（始めた理由＋趣味＋誠実さ）。';
   return '投稿。1行目のフック、簡潔な本文、ハッシュタグは少なめ。';
 }
 function aiPromptFor(src,pid,tpl){
@@ -1256,14 +1239,6 @@ function previewHTML(c){var v=c.values||{};var out='';
       '<div style="color:#6b7280;font-size:12px;margin-bottom:8px">'+name+' ・ 視聴1回 ・ 今</div>'+
       '<div style="background:#f3f4f6;border-radius:10px;padding:10px;font-size:13px;white-space:pre-wrap">'+esc(v.description||'')+' '+pvTags(v.hashtags)+'</div>'+
       (v.chapters?'<div class="pv-body" style="font-size:13px;color:#374151">'+esc(v.chapters)+'</div>':'')+'</div>';
-  }else if(c.platformId==='wakuwaku'){
-    out='<div class="pv-light"><div style="display:flex;gap:12px;align-items:center">'+
-      '<div style="width:64px;height:64px;border-radius:50%;background:#f59e0b"></div>'+
-      '<div><div class="pv-name" style="font-size:15px">'+esc(v.oneLine||'（コメント未設定）')+'</div>'+
-      '<div class="pv-handle">'+name+'</div></div></div>'+
-      '<div class="pv-body">'+esc(v.selfIntro||'')+'</div>'+
-      '<div class="pv-meta">'+[v.reason?'始めた理由：'+esc(v.reason):'',v.hobby?'趣味：'+esc(v.hobby):''].filter(Boolean).join(' ／ ')+'</div>'+
-      '<div class="pv-meta">写真メモ：'+esc(v.photoMemo||'自然光・明るい場所・顔が分かる写真')+'</div></div>';
   }else if(c.templateId==='blog-invest'){
     var t0=getTemplate(c.templateId);
     out='<div class="pv-light"><h1 style="font-size:22px;margin-bottom:6px">'+esc(v.title||c.title||'')+'</h1>'+
