@@ -1479,7 +1479,7 @@ function render(){
   }
 }
 function sidebarHTML(){var distPlats=PLATFORMS.filter(function(p){return p.id!=='source';});
-  return '<div class="sidebar"><div class="logo">B面サイト管理 v12</div>'+
+  return '<div class="sidebar"><div class="logo">サイト記事管理 v12</div>'+
   '<div class="menu-item" data-m="dashboard" onclick="nav(\'dashboard\')">'+t('dashboard')+'</div>'+
   '<div class="menu-item" data-m="source" onclick="nav(\'source\')">'+t('source')+'</div>'+
   '<div class="menu-item" data-m="platforms" onclick="nav(\'platforms\')">'+t('menuMgmt')+'</div>'+
@@ -1511,7 +1511,7 @@ function renderLoginScreen(){
   appEl.innerHTML = `
     <div id="loginContainer">
       <div class="login-card">
-        <h2>B面サイト管理</h2>
+        <h2>サイト記事管理</h2>
         <input type="email" id="loginEmail" placeholder="メールアドレス" autocomplete="off">
         <input type="password" id="loginPass" placeholder="パスワード">
         <button class="btn btn-primary" onclick="loginWithEmail()">ログイン</button>
