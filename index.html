@@ -142,7 +142,74 @@ textarea.big{min-height:120px}
 .login-card button { width: 100%; margin-top: 8px; }
 .google-btn { background: #ffffff !important; color: #333 !important; border: 2px solid var(--border) !important; margin-top: 10px !important; }
 
-@media(max-width:900px){.sidebar{display:none}.main{margin-left:0;width:100%}}
+/* ========== 6인치 스마트폰 화면 최적화 (모바일 전용 오버라이드) ========== */
+@media(max-width:900px){
+  html, body { overflow: auto; height: auto; }
+  #app { flex-direction: column; height: auto; min-height: 100vh; width: 100vw; overflow-x: hidden; }
+  
+  /* 사이드바를 상단 고정 네비게이션 또는 접이식 스타일로 변경하여 콘텐츠 영역 확보 */
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+    box-shadow: none;
+    border-right: none;
+    border-bottom: 2px solid var(--border);
+    padding: 10px;
+  }
+  .logo { font-size: 15px; padding: 4px 8px 8px; }
+  .menu-item { display: inline-block; width: auto; padding: 6px 10px; margin: 3px 2px; font-size: 12px; border-radius: 10px; }
+  .menu-item.sub { display: inline-block; margin-left: 4px; padding-left: 10px; font-size: 11px; }
+
+  /* 메인 콘텐츠 영역 조정 */
+  .main {
+    margin-left: 0;
+    width: 100%;
+    height: auto;
+    padding: 12px;
+    overflow: visible;
+  }
+
+  /* 상단 바 (TopBar) 요소들 세로 정렬 및 크기 최적화 */
+  .topbar {
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .tb-title { font-size: 16px; width: 100%; }
+  #searchBox { width: 100% !important; order: 3; }
+  #langSelect { width: 48% !important; order: 4; font-size: 12px; padding: 7px; }
+  .topbar .btn { flex: 1; min-width: 48%; font-size: 12px; padding: 8px 10px; }
+
+  /* 그리드 및 카드 요소 단일 컬럼으로 전환 (6인치 화면 맞춤) */
+  .platgrid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .fgrid { grid-template-columns: 1fr; gap: 0; }
+  .row2 { grid-template-columns: 1fr; gap: 8px; }
+  
+  /* 대시보드 및 링크 2열 그리드 유지, 카드 패딩 축소 */
+  div[style*="grid-template-columns:repeat(4,1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  div[style*="grid-template-columns:repeat(2,1fr)"] {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .card { padding: 12px 14px; border-radius: 14px; margin-bottom: 10px; }
+  
+  /* 테이블 모바일 스크롤 및 폰트 크기 최적화 */
+  .tbl th, .tbl td { padding: 6px 8px; font-size: 11px; }
+  table.tbl { display: block; width: 100%; overflow-x: auto; white-space: nowrap; }
+
+  /* 버튼 및 액션 바 컴팩트화 */
+  .actions { gap: 6px; }
+  .actions .btn { font-size: 11px; padding: 7px 12px; }
+  
+  /* 미리보기 박스 모바일 대응 */
+  .pv-light { max-width: 100%; padding: 12px; }
+}
 </style>
 </head>
 <body>
@@ -242,7 +309,7 @@ var currentLang = storeGet('bmen_lang') || 'ja';
 var LANGS = [
   {id:'ja', label:'🇯🇵 日本語'},
   {id:'en', label:'🇺🇸 English'},
-  {id:'ko', label:'🇰🇷 韓国語'},
+  {id:'ko', label:'🇰🇷 한국어'},
   {id:'zh', label:'🇨🇳 中国語'},
   {id:'es', label:'🇪🇸 スペイン語'}
 ];
@@ -266,7 +333,7 @@ var i18n = {
     templates:'テンプレート', publishMgmt:'公開管理', quickLinks:'クイックリンク', settings:'設定', search:'検索', newCreate:'新規作成', createFromTpl:'テンプレートから作成',
     recentContent:'最近のコンテンツ', quickCreate:'クイック作成', manage:'管理', viewAll:'すべて見る', title:'タイトル', platform:'プラットフォーム', template:'テンプレート',
     status:'状態', pubDate:'公開予定日', updateDate:'更新日', action:'操作', delete:'削除', edit:'編集', save:'保存', cancel:'キャンセル', open:'開く',
-    stDraft:'下書き', stReview:'推敲中', stScheduled:'公開予定', stPublished:'公開済み', stArchived:'アーカイブ', logout:'ログアウト'
+    stDraft:'下書き', stReview:'推敲中', stScheduled:'公開予定', stPublished:'公開済み', stArchived:'アーカイブ', logout:'로그아웃'
   },
   zh: {
     sysTitle:'B面网站管理系统', dashboard:'仪表板', source:'源内容', menuMgmt:'菜单管理', createContent:'创建内容',
@@ -1024,7 +1091,7 @@ function viewTplEdit(){var d=state.tplDraft;
       '</select></div></div></div>';
   html+=d.fields.map(function(f,i){
     return '<div class="card"><div class="sechead">フィールド '+(i+1)+
-      '<button class="btn btn-ghost sm" onclick="tplMove('+i+',-1)">↑</button>'+
+      '<button class="btn btn-ghost sm" onclick="tplMove('+i,+'-1)">↑</button>'+
       '<button class="btn btn-ghost sm" onclick="tplMove('+i+',1)">↓</button>'+
       '<button class="btn btn-danger sm" style="margin-left:auto" onclick="tplDelField('+i+')">'+t('delete')+'</button></div>'+
     '<div class="row2">'+
