@@ -116,7 +116,7 @@ textarea.big{min-height:120px}
 .pv-meta{color:#6b7280;font-size:12px;margin-top:10px;border-top:1px solid #e5e7eb;padding-top:8px;font-weight:700}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#fff;border:2px solid var(--border);color:var(--text);padding:12px 20px;border-radius:14px;opacity:0;pointer-events:none;transition:.3s;z-index:99;box-shadow:0 6px 20px rgba(140,120,70,.18);font-weight:800}
 #toast.show{opacity:1}
-@media(max-width:900px){.sidebar{display:none}.main{margin-left:0;width:100%}}
+@media(max-width:900px){.sidebar{sidebar:none}.main{margin-left:0;width:100%}}
 </style>
 </head>
 <body>
@@ -1233,7 +1233,7 @@ function viewLinks(){
       '<div style="flex:1;min-width:0"><div class="qname" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(l.name)+'</div>'+
       '<div class="muted" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(l.url||'URL未設定')+'</div></div>'+
       '<button class="btn btn-ghost sm" onclick="editLink(\''+l.id+'\')">編集</button>'+
-      '<button class="btn btn-danger sm" onclick="delLink(\'\\''+l.id+'\\'')">削除</button></div>';}).join('');
+      '<button class="btn btn-danger sm" onclick="delLink(\''+l.id+'\')">削除</button></div>';}).join('');
   return '<div class="sechead big">クイックリンク <span class="muted">'+LINKLIST.length+'件</span>'+
     '<button class="btn btn-primary" style="margin-left:auto" onclick="newLink()">＋ 新規リンク</button></div>'+
     '<p class="muted" style="margin-bottom:10px">追加・編集したリンクはダッシュボードのクイックリンクにすぐ反映されます。</p>'+
@@ -1304,7 +1304,7 @@ function sidebarHTML(){var distPlats=PLATFORMS.filter(function(p){return p.id!==
   distPlats.map(function(p){return '<div class="menu-item sub" data-m="list-'+p.id+'" onclick="nav(\'list\',{platform:\''+p.id+'\'})">'+p.name+'</div>';}).join('')+
   '<div class="spec-spacing"></div>'+
   '<div class="menu-item" data-m="templates" onclick="nav(\'templates\')">テンプレート</div>'+
-  '<div class="menu-item" data-m="publish" onclick="nav(\'publish\')">公開管理</div>'+
+  '<div class="menu-item" data-m="publish" onclick="nav(\'publish\')">`公開管理`</div>'+
   '<div class="menu-item" data-m="links" onclick="nav(\'links\')">クイックリンク</div>'+
   '<div class="menu-item" data-m="settings" onclick="nav(\'settings\')">設定</div></div>';}
 
