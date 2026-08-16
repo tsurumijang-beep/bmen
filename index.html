@@ -1503,10 +1503,10 @@ function viewSettings(){
     '<div class="help" style="margin-top:6px">直近成功モデル: '+esc(storeGet('bmen_ai_last_ok')||'（未確定）')+
     ' ／ 成功したモデルは次回から最初に試行されます</div></div></div>'+
   '<div class="card"><div class="sechead">データ管理</div>'+
-    '<p class="muted" style="margin-bottom:12px">データ・テンプレート・リンクはこのブラウザ（localStorage）に保存されます。バックアップはエクスポートを使ってください。</p>'+
+    '<p class="muted" style="margin-bottom:12px">データ・テンプレート・クイックリンクはこのブラウザ（localStorage）に保存されます。バックアップ・復元はこちらから行えます。</p>'+
     '<div class="quickbar">'+
-      '<button class="btn btn-primary" onclick="exportData()">エクスポート（JSON）</button>'+
-      '<button class="btn btn-outline" onclick="document.getElementById(\'importFile\').click()">インポート</button>'+
+      '<button class="btn btn-primary" onclick="exportData()">バックアップ用データ抽出</button>'+
+      '<button class="btn btn-outline" onclick="document.getElementById(\'importFile\').click()">バックアップデータ挿入</button>'+
       '<button class="btn btn-ghost" onclick="resetSeed()">サンプルデータに戻す</button>'+
       '<button class="btn btn-danger" onclick="clearAll()">全データ消去</button>'+
     '</div></div>'+
